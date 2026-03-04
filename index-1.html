@@ -2,596 +2,208 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MothCoin</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; }
   body {
-    background: #0a0015;
+    background: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    overflow: hidden;
-    font-family: 'Segoe UI', sans-serif;
   }
-
-  /* ── TOP BAR ── */
-  #topbar {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 52px;
-    background: rgba(10,0,21,0.92);
-    border-bottom: 1px solid #6a00ff44;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    z-index: 100;
-  }
-  #logo {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: 3px;
-    color: #c084fc;
-    text-shadow: 0 0 12px #a855f7;
-  }
-  #logo span { color: #fbbf24; }
-
-  #wallet-section { display: flex; align-items: center; gap: 12px; }
-  #moth-balance {
-    color: #fbbf24;
-    font-size: 14px;
-    font-weight: 600;
-    background: rgba(251,191,36,0.1);
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid #fbbf2444;
-    display: none;
-  }
-  #connect-btn {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 20px;
+  canvas { display: block; }
+  #msg {
+    font-family: monospace;
     font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-    box-shadow: 0 0 14px #7c3aed66;
-  }
-  #connect-btn:hover { transform: scale(1.05); box-shadow: 0 0 22px #a855f7aa; }
-  #wallet-addr {
-    color: #c084fc;
-    font-size: 12px;
-    display: none;
-  }
-
-  /* ── CANVAS WRAPPER ── */
-  #game-wrap {
-    margin-top: 52px;
-    position: relative;
-  }
-  canvas {
-    display: block;
-    border: 1px solid #6a00ff33;
-    box-shadow: 0 0 40px #7c3aed44;
-  }
-
-  /* ── SCORE HUD ── */
-  #hud {
-    position: absolute;
-    top: 12px; left: 12px;
-    color: #fbbf24;
-    font-size: 13px;
-    font-weight: 600;
-    pointer-events: none;
-  }
-  #hud .label { color: #c084fc; font-size: 11px; letter-spacing: 1px; }
-
-  /* ── FLOATING EARN NOTIFICATION ── */
-  #earn-notif {
-    position: absolute;
-    top: 60px; right: 16px;
-    color: #4ade80;
-    font-size: 13px;
-    font-weight: 700;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-  }
-
-  /* ── OVERLAY SCREENS ── */
-  .screen {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(10,0,21,0.88);
-    z-index: 10;
-  }
-  .screen h1 {
-    font-size: 42px;
-    font-weight: 900;
-    letter-spacing: 6px;
-    color: #c084fc;
-    text-shadow: 0 0 30px #a855f7;
-    margin-bottom: 6px;
-  }
-  .screen h1 span { color: #fbbf24; }
-  .screen p {
-    color: #94a3b8;
-    font-size: 14px;
-    margin-bottom: 28px;
-    letter-spacing: 1px;
-  }
-  .play-btn {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: white;
-    border: none;
-    padding: 14px 44px;
-    border-radius: 30px;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
+    color: #aaa;
+    margin-top: 12px;
     letter-spacing: 2px;
-    box-shadow: 0 0 28px #7c3aed88;
-    transition: all 0.2s;
-  }
-  .play-btn:hover { transform: scale(1.07); box-shadow: 0 0 40px #a855f7bb; }
-
-  #controls-hint {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #475569;
-    font-size: 11px;
-    letter-spacing: 1px;
-    pointer-events: none;
   }
 </style>
 </head>
 <body>
-
-<!-- TOP BAR -->
-<div id="topbar">
-  <div id="logo">MOTH<span>COIN</span></div>
-  <div id="wallet-section">
-    <div id="moth-balance">🪙 <span id="moth-amount">0</span> MOTH</div>
-    <div id="wallet-addr"></div>
-    <button id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
-  </div>
-</div>
-
-<!-- GAME -->
-<div id="game-wrap">
-  <canvas id="game" width="800" height="500"></canvas>
-  <div id="hud">
-    <div class="label">SCORE</div>
-    <div id="score-display">0</div>
-    <div class="label" style="margin-top:8px">SESSION MOTH</div>
-    <div id="session-moth">+0 MOTH</div>
-  </div>
-  <div id="earn-notif"></div>
-  <div id="controls-hint">← → MOVE &nbsp;|&nbsp; SPACE / ↑ JUMP &nbsp;|&nbsp; Collect 🪙 to earn MOTH</div>
-
-  <!-- TITLE SCREEN -->
-  <div class="screen" id="title-screen">
-    <h1>MOTH<span>COIN</span></h1>
-    <p>FLY. COLLECT. EARN.</p>
-    <button class="play-btn" onclick="startGame()">▶ PLAY</button>
-  </div>
-
-  <!-- GAME OVER SCREEN -->
-  <div class="screen" id="gameover-screen" style="display:none">
-    <h1 style="font-size:32px">GAME OVER</h1>
-    <p id="go-score" style="color:#fbbf24;font-size:18px;margin-bottom:6px"></p>
-    <p id="go-moth" style="color:#4ade80;font-size:15px;margin-bottom:24px"></p>
-    <button class="play-btn" onclick="startGame()">▶ PLAY AGAIN</button>
-  </div>
-</div>
+<canvas id="c" width="800" height="300"></canvas>
+<div id="msg">PRESS SPACE TO START</div>
 
 <script>
-// ── CANVAS SETUP ──
-const canvas = document.getElementById('game');
-const ctx    = canvas.getContext('2d');
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
+const GROUND = H - 40;
 
-// ── STATE ──
-let gameState  = 'title'; // title | playing | gameover
-let score      = 0;
-let sessionMoth= 0;
-let walletConnected = false;
-let walletBalance   = 0;
-let frame      = 0;
+let state = 'idle'; // idle | playing | dead
+let score = 0;
+let hiScore = 0;
+let frame = 0;
+let speed = 5;
 
-// ── PLAYER ──
-const GRAVITY  = 0.55;
-const JUMP_V   = -13;
-let player = { x:120, y:300, w:36, h:36, vx:0, vy:0, onGround:false, flap:0 };
+// MOTH
+const moth = { x: 80, y: GROUND - 40, w: 40, h: 30, vy: 0 };
+const GRAVITY = 0.7;
+const JUMP = -14;
+let onGround = true;
 
-// ── INPUT ──
-const keys = {};
+// OBSTACLES
+let obstacles = [];
+let obstTimer = 0;
+let obstInterval = 90;
+
+// SCORE
+let scoreTimer = 0;
+
+function reset() {
+  moth.y = GROUND - moth.h;
+  moth.vy = 0;
+  onGround = true;
+  obstacles = [];
+  obstTimer = 0;
+  score = 0;
+  speed = 5;
+  frame = 0;
+  scoreTimer = 0;
+  obstInterval = 90;
+}
+
 window.addEventListener('keydown', e => {
-  keys[e.code] = true;
-  if ((e.code==='Space'||e.code==='ArrowUp') && player.onGround && gameState==='playing') {
-    player.vy = JUMP_V;
-    player.onGround = false;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (state === 'idle') { state = 'playing'; reset(); }
+    else if (state === 'dead') { state = 'playing'; reset(); }
+    else if (state === 'playing' && onGround) {
+      moth.vy = JUMP;
+      onGround = false;
+    }
   }
 });
-window.addEventListener('keyup', e => keys[e.code] = false);
 
-// ── PLATFORMS ──
-function makePlatforms() {
-  return [
-    { x:0,   y:460, w:800, h:20 }, // ground
-    { x:100, y:370, w:120, h:14 },
-    { x:280, y:300, w:120, h:14 },
-    { x:460, y:230, w:120, h:14 },
-    { x:620, y:310, w:120, h:14 },
-    { x:340, y:170, w:100, h:14 },
-    { x:550, y:140, w:100, h:14 },
-    { x:140, y:210, w:100, h:14 },
-    { x:680, y:400, w:100, h:14 },
-  ];
-}
-let platforms = makePlatforms();
-
-// ── COINS ──
-function makeCoin(x, y, val=5) {
-  return { x, y, r:9, val, bob:Math.random()*Math.PI*2, collected:false, sparkle:0 };
-}
-let coins = [];
-function spawnCoins() {
-  coins = [
-    makeCoin(155, 350),
-    makeCoin(335, 278),
-    makeCoin(515, 208),
-    makeCoin(675, 288),
-    makeCoin(390, 148),
-    makeCoin(600, 118),
-    makeCoin(190, 188),
-    makeCoin(735, 378),
-    makeCoin(250, 438),
-    makeCoin(520, 438),
-    makeCoin(400, 438, 10),
-  ];
-}
-
-// ── PARTICLES ──
-let particles = [];
-function burst(x, y, color='#fbbf24') {
-  for(let i=0;i<10;i++) {
-    const angle = Math.random()*Math.PI*2;
-    const speed = 1.5 + Math.random()*3;
-    particles.push({
-      x, y,
-      vx: Math.cos(angle)*speed,
-      vy: Math.sin(angle)*speed - 1,
-      life: 1,
-      color
-    });
-  }
-}
-
-// ── STARS ──
-const stars = Array.from({length:120}, ()=>({
-  x: Math.random()*W,
-  y: Math.random()*H,
-  r: Math.random()*1.5+0.3,
-  twinkle: Math.random()*Math.PI*2
-}));
-
-// ── WALLET ──
-async function connectWallet() {
-  if (typeof window.ethereum === 'undefined') {
-    alert('MetaMask not detected!\nInstall MetaMask to connect your wallet.');
-    return;
-  }
-  try {
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const addr = accounts[0];
-    walletConnected = true;
-    walletBalance   = Math.floor(Math.random()*500); // mock balance until contract
-    document.getElementById('connect-btn').style.display  = 'none';
-    document.getElementById('wallet-addr').style.display  = 'block';
-    document.getElementById('moth-balance').style.display = 'block';
-    document.getElementById('wallet-addr').textContent = addr.slice(0,6)+'...'+addr.slice(-4);
-    document.getElementById('moth-amount').textContent = walletBalance;
-  } catch(e) {
-    console.log('Wallet connection rejected');
-  }
-}
-
-function addMoth(amount) {
-  sessionMoth += amount;
-  if (walletConnected) {
-    walletBalance += amount;
-    document.getElementById('moth-amount').textContent = walletBalance;
-  }
-  document.getElementById('session-moth').textContent = '+' + sessionMoth + ' MOTH';
-  showEarnNotif('+' + amount + ' MOTH');
-}
-
-function showEarnNotif(text) {
-  const el = document.getElementById('earn-notif');
-  el.textContent = text;
-  el.style.opacity = '1';
-  clearTimeout(el._t);
-  el._t = setTimeout(()=> el.style.opacity='0', 900);
-}
-
-// ── GAME LOOP ──
-function startGame() {
-  document.getElementById('title-screen').style.display    = 'none';
-  document.getElementById('gameover-screen').style.display = 'none';
-  gameState   = 'playing';
-  score       = 0;
-  sessionMoth = 0;
-  player      = { x:120, y:300, w:36, h:36, vx:0, vy:0, onGround:false, flap:0 };
-  platforms   = makePlatforms();
-  spawnCoins();
-  particles   = [];
-  document.getElementById('session-moth').textContent = '+0 MOTH';
-}
-
-function gameOver() {
-  gameState = 'gameover';
-  document.getElementById('gameover-screen').style.display = 'flex';
-  document.getElementById('go-score').textContent  = 'Score: ' + score;
-  document.getElementById('go-moth').textContent   = 'Earned: +' + sessionMoth + ' MOTH this session';
+function spawnObstacle() {
+  const h = 20 + Math.random() * 30;
+  obstacles.push({ x: W + 10, w: 18, h: h, y: GROUND - h });
 }
 
 function update() {
-  if (gameState !== 'playing') return;
+  if (state !== 'playing') return;
   frame++;
 
-  // movement
-  player.vx = 0;
-  if (keys['ArrowLeft']  || keys['KeyA']) player.vx = -4.5;
-  if (keys['ArrowRight'] || keys['KeyD']) player.vx =  4.5;
+  // score
+  scoreTimer++;
+  if (scoreTimer % 6 === 0) score++;
+  if (score > hiScore) hiScore = score;
 
-  // gravity
-  player.vy += GRAVITY;
-  player.x  += player.vx;
-  player.y  += player.vy;
+  // speed up gradually
+  speed = 5 + score * 0.01;
+  if (score % 100 === 0 && score > 0) obstInterval = Math.max(45, obstInterval - 1);
 
-  // wrap horizontally
-  if (player.x > W)  player.x = -player.w;
-  if (player.x < -player.w) player.x = W;
+  // moth physics
+  moth.vy += GRAVITY;
+  moth.y  += moth.vy;
+  if (moth.y >= GROUND - moth.h) {
+    moth.y = GROUND - moth.h;
+    moth.vy = 0;
+    onGround = true;
+  }
 
-  // platform collision
-  player.onGround = false;
-  for (const p of platforms) {
+  // obstacles
+  obstTimer++;
+  if (obstTimer >= obstInterval) {
+    spawnObstacle();
+    obstTimer = 0;
+    obstInterval = 60 + Math.random() * 60;
+  }
+  for (const o of obstacles) o.x -= speed;
+  obstacles = obstacles.filter(o => o.x + o.w > -10);
+
+  // collision
+  for (const o of obstacles) {
     if (
-      player.vy >= 0 &&
-      player.x + player.w > p.x &&
-      player.x < p.x + p.w &&
-      player.y + player.h > p.y &&
-      player.y + player.h < p.y + p.h + 12
+      moth.x + moth.w - 6 > o.x + 4 &&
+      moth.x + 6 < o.x + o.w - 4 &&
+      moth.y + moth.h - 4 > o.y
     ) {
-      player.y  = p.y - player.h;
-      player.vy = 0;
-      player.onGround = true;
+      state = 'dead';
     }
   }
-
-  // fall off bottom
-  if (player.y > H + 60) gameOver();
-
-  // coin collection
-  for (const c of coins) {
-    if (c.collected) continue;
-    const dx = (player.x + player.w/2) - c.x;
-    const dy = (player.y + player.h/2) - c.y;
-    if (Math.sqrt(dx*dx+dy*dy) < c.r + 18) {
-      c.collected = true;
-      c.sparkle   = 1;
-      score      += c.val * 10;
-      addMoth(c.val);
-      burst(c.x, c.y, '#fbbf24');
-    }
-  }
-
-  // respawn coins when all collected
-  if (coins.every(c=>c.collected)) spawnCoins();
-
-  // particles
-  for (const p of particles) {
-    p.x   += p.vx;
-    p.y   += p.vy;
-    p.vy  += 0.1;
-    p.life -= 0.04;
-  }
-  particles = particles.filter(p=>p.life>0);
-
-  // score display
-  document.getElementById('score-display').textContent = score;
 }
 
-// ── DRAW HELPERS ──
-function drawStar(x,y,r,color='#c084fc') {
+function drawMoth(x, y) {
   ctx.save();
-  ctx.shadowBlur  = 8;
-  ctx.shadowColor = color;
-  ctx.fillStyle   = color;
-  ctx.beginPath();
-  ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.fill();
-  ctx.restore();
-}
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.8;
 
-function drawMoth(x, y, w, h, flap) {
-  const cx = x + w/2, cy = y + h/2;
-  const wingFlap = Math.sin(frame * 0.25) * 0.4;
-
-  ctx.save();
-  ctx.shadowBlur  = 18;
-  ctx.shadowColor = '#a855f7';
-
-  // wings
-  ctx.fillStyle = 'rgba(192,132,252,0.85)';
   // left wing
   ctx.beginPath();
-  ctx.ellipse(cx - 14, cy - 2, 16 + wingFlap*4, 10, -0.4, 0, Math.PI*2);
-  ctx.fill();
-  // right wing
-  ctx.beginPath();
-  ctx.ellipse(cx + 14, cy - 2, 16 + wingFlap*4, 10,  0.4, 0, Math.PI*2);
-  ctx.fill();
-
-  // lower wings
-  ctx.fillStyle = 'rgba(168,85,247,0.6)';
-  ctx.beginPath();
-  ctx.ellipse(cx - 12, cy + 8, 10, 7, -0.6, 0, Math.PI*2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(cx + 12, cy + 8, 10, 7,  0.6, 0, Math.PI*2);
-  ctx.fill();
-
-  // wing pattern dots
-  ctx.fillStyle = '#fbbf24';
-  ctx.shadowColor = '#fbbf24';
-  ctx.shadowBlur  = 6;
-  [[cx-16,cy-4],[cx+16,cy-4],[cx-10,cy+7],[cx+10,cy+7]].forEach(([px,py])=>{
-    ctx.beginPath(); ctx.arc(px,py,2.5,0,Math.PI*2); ctx.fill();
-  });
-
-  // body
-  ctx.fillStyle   = '#e9d5ff';
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur  = 10;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, 5, 10, 0, 0, Math.PI*2);
-  ctx.fill();
-
-  // antennae
-  ctx.strokeStyle = '#c084fc';
-  ctx.lineWidth   = 1.5;
-  ctx.shadowBlur  = 4;
-  ctx.beginPath(); ctx.moveTo(cx-2,cy-10); ctx.quadraticCurveTo(cx-10,cy-22,cx-8,cy-26); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx+2,cy-10); ctx.quadraticCurveTo(cx+10,cy-22,cx+8,cy-26); ctx.stroke();
-
-  ctx.restore();
-}
-
-function drawPlatform(p) {
-  ctx.save();
-  // glow
-  ctx.shadowBlur  = 14;
-  ctx.shadowColor = '#7c3aed';
-  // body
-  const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y+p.h);
-  grad.addColorStop(0, '#6d28d9');
-  grad.addColorStop(1, '#4c1d95');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(p.x, p.y, p.w, p.h, 6);
-  ctx.fill();
-  // top shine
-  ctx.fillStyle = 'rgba(196,181,253,0.25)';
-  ctx.beginPath();
-  ctx.roundRect(p.x+4, p.y+2, p.w-8, 4, 3);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawCoin(c) {
-  if (c.collected) return;
-  const bob = Math.sin(frame*0.06 + c.bob) * 3;
-  const cx = c.x, cy = c.y + bob;
-
-  ctx.save();
-  ctx.shadowBlur  = 16;
-  ctx.shadowColor = '#fbbf24';
-
-  // outer ring
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth   = 2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, c.r, 0, Math.PI*2);
+  ctx.ellipse(x - 10, y + 10, 14, 9, -0.5, 0, Math.PI * 2);
   ctx.stroke();
 
-  // fill
-  const grad = ctx.createRadialGradient(cx-2,cy-2,1,cx,cy,c.r);
-  grad.addColorStop(0,'#fef3c7');
-  grad.addColorStop(1,'#d97706');
-  ctx.fillStyle = grad;
+  // right wing
   ctx.beginPath();
-  ctx.arc(cx, cy, c.r-1, 0, Math.PI*2);
-  ctx.fill();
+  ctx.ellipse(x + 10, y + 10, 14, 9, 0.5, 0, Math.PI * 2);
+  ctx.stroke();
 
-  // moth wing symbol
-  ctx.fillStyle   = '#92400e';
-  ctx.font        = `${c.r}px serif`;
-  ctx.textAlign   = 'center';
-  ctx.textBaseline= 'middle';
-  ctx.fillText('🦋', cx, cy);
+  // body
+  ctx.beginPath();
+  ctx.ellipse(x, y + 12, 4, 10, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // antennae
+  ctx.beginPath();
+  ctx.moveTo(x - 2, y + 2);
+  ctx.quadraticCurveTo(x - 8, y - 8, x - 6, y - 14);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + 2, y + 2);
+  ctx.quadraticCurveTo(x + 8, y - 8, x + 6, y - 14);
+  ctx.stroke();
 
   ctx.restore();
-}
-
-function drawParticles() {
-  for (const p of particles) {
-    ctx.save();
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle   = p.color;
-    ctx.shadowBlur  = 8;
-    ctx.shadowColor = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-  }
 }
 
 function draw() {
-  // background
-  const bg = ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0, '#0a0015');
-  bg.addColorStop(1, '#1a0030');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0,0,W,H);
+  ctx.clearRect(0, 0, W, H);
 
-  // stars
-  for (const s of stars) {
-    s.twinkle += 0.04;
-    const alpha = 0.4 + Math.sin(s.twinkle)*0.4;
-    ctx.globalAlpha = alpha;
-    drawStar(s.x, s.y, s.r);
-  }
-  ctx.globalAlpha = 1;
-
-  // moon
-  ctx.save();
-  ctx.shadowBlur  = 40;
-  ctx.shadowColor = '#fef9c3';
-  const moonGrad = ctx.createRadialGradient(680,60,5,680,60,50);
-  moonGrad.addColorStop(0,'#fef9c3');
-  moonGrad.addColorStop(1,'#fde68a');
-  ctx.fillStyle = moonGrad;
+  // ground line
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(680,60,42,0,Math.PI*2);
-  ctx.fill();
-  ctx.restore();
+  ctx.moveTo(0, GROUND);
+  ctx.lineTo(W, GROUND);
+  ctx.stroke();
 
-  // platforms
-  for (const p of platforms) drawPlatform(p);
+  // moth
+  drawMoth(moth.x + moth.w / 2, moth.y + 4);
 
-  // coins
-  for (const c of coins) drawCoin(c);
+  // obstacles (simple pillars)
+  ctx.fillStyle = '#000';
+  for (const o of obstacles) {
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+  }
 
-  // moth player
-  drawMoth(player.x, player.y, player.w, player.h, player.flap);
+  // score
+  ctx.fillStyle = '#555';
+  ctx.font = '14px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('HI ' + String(hiScore).padStart(5,'0') + '   ' + String(score).padStart(5,'0'), W - 20, 30);
 
-  // particles
-  drawParticles();
+  // messages
+  ctx.textAlign = 'center';
+  if (state === 'idle') {
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText('MOTHCOIN', W/2, H/2 - 20);
+    ctx.font = '13px monospace';
+    ctx.fillStyle = '#888';
+    ctx.fillText('PRESS SPACE TO START', W/2, H/2 + 10);
+  }
+  if (state === 'dead') {
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('GAME OVER', W/2, H/2 - 10);
+    ctx.font = '12px monospace';
+    ctx.fillStyle = '#888';
+    ctx.fillText('PRESS SPACE TO RESTART', W/2, H/2 + 16);
+  }
 }
 
 function loop() {
