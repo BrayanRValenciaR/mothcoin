@@ -132,7 +132,7 @@ function draw() {
   ctx.clearRect(0, 0, W, H);
 
   // Sky-ish background
-  ctx.fillStyle = "#101418";
+  ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
   // Ground line
