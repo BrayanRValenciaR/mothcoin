@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="512" height="512"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+// background
+ctx.fillStyle = "#000000";
+ctx.fillRect(0,0,512,512);
+
+// text
+ctx.fillStyle = "#ffffff";
+ctx.font = "bold 220px Arial";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.fillText("M",256,256);
+
+// download icon
+const link = document.createElement("a");
+link.download = "icon-512.png";
+link.href = canvas.toDataURL();
+link.click();
+</script>
+</body>
+</html>
