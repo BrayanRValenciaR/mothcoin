@@ -145,7 +145,7 @@ function draw() {
 
   // Player
   ctx.fillStyle = "#eaeaea";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
+  ctx.drawimage(playerimg, player.x, player.y, player.w, player.h);
 
   // Obstacles
   ctx.fillStyle = "#4cff7a";
