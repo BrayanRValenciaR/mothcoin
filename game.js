@@ -150,7 +150,7 @@ function draw() {
   // Obstacles
   ctx.fillStyle = "#4cff7a";
   for (const o of obstacles) {
-    ctx.fillRect(o.x, o.y, o.w, o.h);
+    ctx.drawimage(o.x, o.y, o.w, o.h);
   }
 
   // HUD
