@@ -145,12 +145,12 @@ function draw() {
 
   // Player
   ctx.fillStyle = "#eaeaea";
-  ctx.drawimage(playerimg, player.x, player.y, player.w, player.h);
+  ctx.fillRect(player.x, player.y, player.w, player.h);
 
   // Obstacles
   ctx.fillStyle = "#4cff7a";
   for (const o of obstacles) {
-    ctx.drawimage(o.x, o.y, o.w, o.h);
+    ctx.fillRect(o.x, o.y, o.w, o.h);
   }
 
   // HUD
