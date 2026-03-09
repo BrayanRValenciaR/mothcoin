@@ -23,9 +23,10 @@ let speed = 6;
 let gravity = 0.75;
 let jumpPower = 13;
 let spawnTimer = 0;
-let spawnEvery = 70; // frames
+let spawnEvery = 70;
 let score = 0;
 let best = 0;
+let gameOver = false;
 let gameStarted = false;
 
 // Utilities
@@ -45,7 +46,7 @@ function resetGame() {
   spawnEvery = 70;
   score = 0;
   gameOver = false;
-  gamestarted = false;
+  gameStarted = false;
 
   player.y = groundY - player.h;
   player.vy = 0;
@@ -53,8 +54,10 @@ function resetGame() {
 }
 
 function jump() {
-  gameStared = true;
+  gameStarted = true;
+
   if (gameOver) return;
+
   if (player.onGround) {
     player.vy = -jumpPower;
     player.onGround = false;
@@ -66,13 +69,14 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "Space" || e.code === "ArrowUp") jump();
   if (e.code === "KeyR") resetGame();
 });
+
 canvas.addEventListener("pointerdown", jump);
 
 // Spawn obstacle
 function spawnObstacle() {
-  // Simple cactus block
   const h = 30 + Math.floor(Math.random() * 35);
   const w = 18 + Math.floor(Math.random() * 18);
+
   obstacles.push({
     x: W + 20,
     y: groundY - h,
@@ -84,9 +88,8 @@ function spawnObstacle() {
 
 // Update
 function update() {
- if (!gameStarted || gameOver) return;
+  if (!gameStarted || gameOver) return;
 
-  // Player physics
   player.vy += gravity;
   player.y += player.vy;
 
@@ -96,30 +99,28 @@ function update() {
     player.onGround = true;
   }
 
-  // Spawn logic
   spawnTimer++;
   if (spawnTimer >= spawnEvery) {
     spawnTimer = 0;
     spawnObstacle();
-
-    // Randomize spawn gap a bit
     spawnEvery = 55 + Math.floor(Math.random() * 40);
   }
 
-  // Move obstacles
   for (const o of obstacles) {
     o.x -= speed;
+
     if (!o.passed && o.x + o.w < player.x) {
       o.passed = true;
       score += 1;
-      if (score % 10 === 0) speed += 0.6; // ramp difficulty
+
+      if (score % 10 === 0) {
+        speed += 0.6;
+      }
     }
   }
 
-  // Remove offscreen
   obstacles = obstacles.filter((o) => o.x + o.w > -40);
 
-  // Collision
   for (const o of obstacles) {
     if (rectsOverlap(player, o)) {
       gameOver = true;
@@ -133,11 +134,11 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, W, H);
 
-  // Sky-ish background
+  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Ground line
+  // Ground
   ctx.strokeStyle = "#444";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -146,21 +147,32 @@ function draw() {
   ctx.stroke();
 
   // Player
-  ctx.fillStyle = "#eaeaea";
+  ctx.fillStyle = "#111";
   ctx.fillRect(player.x, player.y, player.w, player.h);
 
   // Obstacles
-  ctx.fillStyle = "#4cff7a";
+  ctx.fillStyle = "#2faa52";
   for (const o of obstacles) {
     ctx.fillRect(o.x, o.y, o.w, o.h);
   }
 
   // HUD
-  ctx.fillStyle = "#cfcfcf";
+  ctx.fillStyle = "#333";
   ctx.font = "16px system-ui, Arial";
   ctx.fillText(`Score: ${score}`, 16, 26);
   ctx.fillText(`Best: ${best}`, 16, 48);
 
+  // Start screen
+  if (!gameStarted && !gameOver) {
+    ctx.fillStyle = "#222";
+    ctx.font = "bold 28px system-ui, Arial";
+    ctx.fillText("Tap to Start", W / 2 - 75, H / 2 - 10);
+
+    ctx.font = "16px system-ui, Arial";
+    ctx.fillText("Tap / Space / Up Arrow to Jump", W / 2 - 115, H / 2 + 22);
+  }
+
+  // Game over screen
   if (gameOver) {
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.fillRect(0, 0, W, H);
@@ -170,9 +182,16 @@ function draw() {
     ctx.fillText("Game Over", W / 2 - 90, H / 2 - 10);
 
     ctx.font = "16px system-ui, Arial";
-    ctx.fillText("Press R to restart", W / 2 - 75, H / 2 + 22);
+    ctx.fillText("Press R or tap to play again", W / 2 - 105, H / 2 + 22);
   }
 }
+
+// Restart on tap after game over
+canvas.addEventListener("pointerdown", () => {
+  if (gameOver) {
+    resetGame();
+  }
+});
 
 // Loop
 function loop() {
