@@ -54,9 +54,15 @@ function resetGame() {
 }
 
 function jump() {
-  gameStarted = true;
+  if (!gameStarted) {
+    gameStarted = true;
+  }
 
-  if (gameOver) return;
+  if (gameOver) {
+    resetGame();
+    gameStarted = true;
+    return;
+  }
 
   if (player.onGround) {
     player.vy = -jumpPower;
@@ -182,16 +188,9 @@ function draw() {
     ctx.fillText("Game Over", W / 2 - 90, H / 2 - 10);
 
     ctx.font = "16px system-ui, Arial";
-    ctx.fillText("Press R or tap to play again", W / 2 - 105, H / 2 + 22);
+    ctx.fillText("Tap to play again", W / 2 - 70, H / 2 + 22);
   }
 }
-
-// Restart on tap after game over
-canvas.addEventListener("pointerdown", () => {
-  if (gameOver) {
-    resetGame();
-  }
-});
 
 // Loop
 function loop() {
