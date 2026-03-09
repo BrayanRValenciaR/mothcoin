@@ -45,6 +45,7 @@ function resetGame() {
   spawnEvery = 70;
   score = 0;
   gameOver = false;
+  gamestarted = false;
 
   player.y = groundY - player.h;
   player.vy = 0;
