@@ -26,7 +26,7 @@ let spawnTimer = 0;
 let spawnEvery = 70; // frames
 let score = 0;
 let best = 0;
-let gameOver = false;
+let gameStarted = false;
 
 // Utilities
 function rectsOverlap(a, b) {
@@ -52,6 +52,7 @@ function resetGame() {
 }
 
 function jump() {
+  gameStared =true;
   if (gameOver) return;
   if (player.onGround) {
     player.vy = -jumpPower;
@@ -82,7 +83,7 @@ function spawnObstacle() {
 
 // Update
 function update() {
-  if (gameOver) return;
+ if (!gameStarted || gameOver) return;
 
   // Player physics
   player.vy += gravity;
