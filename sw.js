@@ -1,4 +1,4 @@
-const CACHE = "runner-v1";
+const CACHE = "runner-v2";
 const ASSETS = ["/", "/index.html", "/game.js", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (e) => {
