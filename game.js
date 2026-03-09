@@ -52,7 +52,7 @@ function resetGame() {
 }
 
 function jump() {
-  gameStared =true;
+  gameStared = true;
   if (gameOver) return;
   if (player.onGround) {
     player.vy = -jumpPower;
