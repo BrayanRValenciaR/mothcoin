@@ -55,7 +55,7 @@ function updatePanel() {
     panelTitle.textContent = "Tap to Start";
     panelSubtitle.textContent = "Tap / Space / Up Arrow to Jump";
   } else {
-    panelTitle.textContent = "Fly Moth";
+    panelTitle.textContent = " Mothcoin";
     panelSubtitle.textContent = "Stay alive and keep scoring";
   }
 }
