@@ -49,13 +49,13 @@ function updatePanel() {
   bestText.textContent = best;
 
   if (gameOver) {
-    panelTitle.textContent = "Game Over Moth";
+    panelTitle.textContent = "Game Over";
     panelSubtitle.textContent = "Tap to play";
   } else if (!gameStarted) {
     panelTitle.textContent = "Tap to Start";
     panelSubtitle.textContent = "Tap / Space / Up Arrow to Jump";
   } else {
-    panelTitle.textContent = "Moth";
+    panelTitle.textContent = "Fly Moth";
     panelSubtitle.textContent = "Stay alive and keep scoring";
   }
 }
