@@ -1,1 +1,1 @@
-# mothcoin
+# moth
