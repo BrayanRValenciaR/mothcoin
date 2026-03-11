@@ -21,6 +21,19 @@ const player = {
   vy: 0,
   onGround: true,
 };
+// moth images
+const moth1 = new Image();
+const moth2 = new Image();
+const moth3 = new Image();
+
+moth1.src = "moth1.png";
+moth2.src = "moth2.png";
+moth3.src = "moth3.png";
+
+const mothFrames = [moth1, moth2, moth3];
+
+let mothFrame = 0;
+let mothTimer = 0;
 
 // Game state
 let obstacles = [];
