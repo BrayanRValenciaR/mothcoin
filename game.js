@@ -1,6 +1,11 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+const scoreText = document.getElementById("scoreText");
+const bestText = document.getElementById("bestText");
+const panelTitle = document.querySelector(".panel-title");
+const panelSubtitle = document.querySelector(".panel-subtitle");
+
 const W = canvas.width;
 const H = canvas.height;
 
@@ -39,6 +44,22 @@ function rectsOverlap(a, b) {
   );
 }
 
+function updatePanel() {
+  scoreText.textContent = score;
+  bestText.textContent = best;
+
+  if (gameOver) {
+    panelTitle.textContent = "Game Over";
+    panelSubtitle.textContent = "Tap to play again";
+  } else if (!gameStarted) {
+    panelTitle.textContent = "Tap to Start";
+    panelSubtitle.textContent = "Tap / Space / Up Arrow to Jump";
+  } else {
+    panelTitle.textContent = "Mothcoin";
+    panelSubtitle.textContent = "Stay alive and keep scoring";
+  }
+}
+
 function resetGame() {
   obstacles = [];
   speed = 6;
@@ -51,16 +72,20 @@ function resetGame() {
   player.y = groundY - player.h;
   player.vy = 0;
   player.onGround = true;
+
+  updatePanel();
 }
 
 function jump() {
   if (!gameStarted) {
     gameStarted = true;
+    updatePanel();
   }
 
   if (gameOver) {
     resetGame();
     gameStarted = true;
+    updatePanel();
     return;
   }
 
@@ -118,6 +143,7 @@ function update() {
     if (!o.passed && o.x + o.w < player.x) {
       o.passed = true;
       score += 1;
+      updatePanel();
 
       if (score % 10 === 0) {
         speed += 0.6;
@@ -131,6 +157,7 @@ function update() {
     if (rectsOverlap(player, o)) {
       gameOver = true;
       best = Math.max(best, score);
+      updatePanel();
       break;
     }
   }
@@ -162,33 +189,10 @@ function draw() {
     ctx.fillRect(o.x, o.y, o.w, o.h);
   }
 
-  // HUD
-  ctx.fillStyle = "#f5f5f5";
-  ctx.font = "16px system-ui, Arial";
-  ctx.fillText(`Score: ${score}`, 16, 26);
-  ctx.fillText(`Best: ${best}`, 16, 48);
-
-  // Start screen
-  if (!gameStarted && !gameOver) {
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 28px system-ui, Arial";
-    ctx.fillText("Tap to Start", W / 2 - 75, H / 2 - 10);
-
-    ctx.font = "16px system-ui, Arial";
-    ctx.fillText("Tap / Space / Up Arrow to Jump", W / 2 - 115, H / 2 + 22);
-  }
-
-  // Game over screen
+  // Game over overlay
   if (gameOver) {
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0, 0, W, H);
-
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 30px system-ui, Arial";
-    ctx.fillText("Game Over", W / 2 - 90, H / 2 - 10);
-
-    ctx.font = "16px system-ui, Arial";
-    ctx.fillText("Tap to play again", W / 2 - 70, H / 2 + 22);
   }
 }
 
@@ -200,4 +204,5 @@ function loop() {
 }
 
 resetGame();
+updatePanel();
 loop();
