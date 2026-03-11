@@ -21,7 +21,8 @@ const player = {
   vy: 0,
   onGround: true,
 };
-// moth images
+
+// Moth images
 const moth1 = new Image();
 const moth2 = new Image();
 const moth3 = new Image();
@@ -30,8 +31,7 @@ moth1.src = "moth1.png";
 moth2.src = "moth2.png";
 moth3.src = "moth3.png";
 
-const mothFrames = [moth1, moth2, moth3];
-
+const mothFrames = [moth1, moth2, moth3, moth2];
 let mothFrame = 0;
 let mothTimer = 0;
 
@@ -68,7 +68,7 @@ function updatePanel() {
     panelTitle.textContent = "Tap to Start";
     panelSubtitle.textContent = "Tap / Space / Up Arrow to Jump";
   } else {
-    panelTitle.textContent = " Mothcoin";
+    panelTitle.textContent = "Mothcoin";
     panelSubtitle.textContent = "Stay alive and keep scoring";
   }
 }
@@ -85,6 +85,9 @@ function resetGame() {
   player.y = groundY - player.h;
   player.vy = 0;
   player.onGround = true;
+
+  mothFrame = 0;
+  mothTimer = 0;
 
   updatePanel();
 }
@@ -174,6 +177,16 @@ function update() {
       break;
     }
   }
+
+  // Moth animation
+  mothTimer++;
+  if (mothTimer > 8) {
+    mothTimer = 0;
+    mothFrame++;
+    if (mothFrame >= mothFrames.length) {
+      mothFrame = 0;
+    }
+  }
 }
 
 // Draw
@@ -192,9 +205,14 @@ function draw() {
   ctx.lineTo(W, groundY);
   ctx.stroke();
 
-  // Player
-  ctx.fillStyle = "#f5f5f5";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
+  // Player moth
+  const currentMoth = mothFrames[mothFrame];
+  if (currentMoth.complete) {
+    ctx.drawImage(currentMoth, player.x, player.y, player.w, player.h);
+  } else {
+    ctx.fillStyle = "#f5f5f5";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+  }
 
   // Obstacles
   ctx.fillStyle = "#2faa52";
