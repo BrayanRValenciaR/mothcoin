@@ -11,30 +11,57 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <style>
-      html, body { margin:0; padding:0; background:#fff; height:100%; }
-      body { display:flex; align-items:center; justify-content:center; }
-      canvas{
-        width:min(96vw, 900px);
-        height:auto;
-        border:1px solid #ccc;
-        border-radius:12px;
-        touch-action:manipulation;
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        height: 100%;
       }
-      .hint{
-        position:fixed;
-        bottom:10px;
-        width:100%;
-        text-align:center;
-        font-family:system-ui, Arial;
-        font-size:13px;
-        color:#444;
-        user-select:none;
-        pointer-events:none;
+
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, Arial, sans-serif;
+      }
+
+      #gameArea {
+        width: min(96vw, 900px);
+        background: #000;
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      canvas {
+        width: 100%;
+        height: auto;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        touch-action: manipulation;
+        display: block;
+        background: #000;
+      }
+
+      .hint {
+        margin-top: 10px;
+        width: min(96vw, 900px);
+        text-align: center;
+        font-size: 13px;
+        color: #444;
+        user-select: none;
+        pointer-events: none;
       }
     </style>
   </head>
   <body>
-    <canvas id="game" width="800" height="260"></canvas>
+    <div id="gameArea">
+      <canvas id="game" width="800" height="260"></canvas>
+    </div>
+
     <div class="hint">Tap to Jump • R to Restart</div>
 
     <script src="./game.js"></script>
