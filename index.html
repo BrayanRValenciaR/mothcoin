@@ -14,7 +14,7 @@
       html, body {
         margin: 0;
         padding: 0;
-        background: #fff;
+        background: #ffffff;
         height: 100%;
       }
 
@@ -28,22 +28,62 @@
 
       #gameArea {
         width: min(96vw, 900px);
-        background: #000;
-        border-radius: 12px;
-        padding: 12px;
+        background: #000000;
+        border-radius: 16px 16px 0 0;
+        padding: 12px 12px 0 12px;
         display: flex;
         justify-content: center;
         align-items: center;
+        box-sizing: border-box;
       }
 
       canvas {
         width: 100%;
         height: auto;
-        border: 1px solid #ccc;
-        border-radius: 12px;
+        border: 1px solid #333;
+        border-radius: 12px 12px 0 0;
         touch-action: manipulation;
         display: block;
-        background: #000;
+        background: #000000;
+      }
+
+      .bottomPanel {
+        width: min(96vw, 900px);
+        background: #f3f3f3;
+        border: 1px solid #d7d7d7;
+        border-top: none;
+        border-radius: 0 0 16px 16px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 90px;
+        box-sizing: border-box;
+      }
+
+      .panel-left {
+        font-size: 13px;
+        color: #444;
+        line-height: 1.6;
+        min-width: 72px;
+      }
+
+      .panel-center {
+        flex: 1;
+        text-align: center;
+      }
+
+      .panel-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 4px;
+      }
+
+      .panel-subtitle {
+        font-size: 13px;
+        color: #666;
       }
 
       .hint {
@@ -60,6 +100,18 @@
   <body>
     <div id="gameArea">
       <canvas id="game" width="800" height="260"></canvas>
+    </div>
+
+    <div class="bottomPanel">
+      <div class="panel-left">
+        <div>Score: <span id="scoreText">0</span></div>
+        <div>Best: <span id="bestText">0</span></div>
+      </div>
+
+      <div class="panel-center">
+        <div class="panel-title">Tap to Start</div>
+        <div class="panel-subtitle">Tap / Space / Up Arrow to Jump</div>
+      </div>
     </div>
 
     <div class="hint">Tap to Jump • R to Restart</div>
