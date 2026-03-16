@@ -224,7 +224,6 @@ function drawSky() {
   drawCloud(345, 330, 1.3);
   drawCloud(60, 460, 0.95);
 }
-}
 
 function drawCloud(x, y, scale) {
   const dark = document.body.classList.contains("dark");
