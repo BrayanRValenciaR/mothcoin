@@ -219,22 +219,11 @@ function drawSky() {
   ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#ef4444";
-  ctx.beginPath();
-  ctx.arc(110, 120, 14, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = dark ? "#bbbbbb" : "#9a9a9a";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(110, 134);
-  ctx.lineTo(113, 168);
-  ctx.stroke();
-
   drawCloud(70, 150, 1.1);
   drawCloud(250, 170, 0.8);
   drawCloud(345, 330, 1.3);
   drawCloud(60, 460, 0.95);
+}
 }
 
 function drawCloud(x, y, scale) {
