@@ -1,3 +1,6 @@
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
 const moth1 = new Image();
 const moth2 = new Image();
 const moth3 = new Image();
@@ -7,11 +10,8 @@ moth2.src = "moth2.png";
 moth3.src = "moth3.png";
 
 const mothFrames = [moth1, moth2, moth3];
-
 let mothFrame = 0;
 let mothFrameTimer = 0;
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
 
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
@@ -188,6 +188,7 @@ function updateGame() {
     if (rectsOverlap(player, o)) {
       scene = "gameover";
       showControls(true);
+
       if (score > best) {
         best = score;
         localStorage.setItem("mothcoin-best", best);
@@ -199,6 +200,7 @@ function updateGame() {
 
   if (scene === "game") {
     score++;
+
     if (score > best) {
       best = score;
       localStorage.setItem("mothcoin-best", best);
@@ -212,13 +214,11 @@ function drawSky() {
   ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
   ctx.fillRect(0, 0, W, H);
 
-  // Sun / moon
   ctx.beginPath();
   ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
   ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
   ctx.fill();
 
-  // Balloon
   ctx.fillStyle = "#ef4444";
   ctx.beginPath();
   ctx.arc(110, 120, 14, 0, Math.PI * 2);
@@ -231,7 +231,6 @@ function drawSky() {
   ctx.lineTo(113, 168);
   ctx.stroke();
 
-  // Clouds
   drawCloud(70, 150, 1.1);
   drawCloud(250, 170, 0.8);
   drawCloud(345, 330, 1.3);
@@ -258,19 +257,16 @@ function drawGround() {
   ctx.strokeStyle = dark ? "#d0d0d0" : "#5a5a5a";
   ctx.lineWidth = 3;
 
-  // Main ground line
   ctx.beginPath();
   ctx.moveTo(0, groundY);
   ctx.lineTo(W, groundY);
   ctx.stroke();
 
-  // Bottom dirt line
   ctx.beginPath();
   ctx.moveTo(0, groundY + 34);
   ctx.lineTo(W, groundY + 34);
   ctx.stroke();
 
-  // Sand dots
   for (let i = 0; i < 40; i++) {
     const x = (i * 18 + (scene === "game" ? score * 0.8 : 0)) % (W + 20);
     const drawX = W - x;
@@ -339,46 +335,43 @@ function drawMenuScene() {
   drawDecorCactus(389, 26);
   drawRocks();
 
-  // Decorative square dino
   const dark = document.body.classList.contains("dark");
   ctx.fillStyle = dark ? "#e9e9e9" : "#4c4c4c";
 
   const dx = 28;
   const dy = groundY - 38;
 
-  ctx.fillRect(dx, dy, 22, 24);        // body
-  ctx.fillRect(dx + 12, dy - 12, 14, 14); // head
-  ctx.fillRect(dx + 4, dy + 24, 5, 16);   // leg 1
-  ctx.fillRect(dx + 14, dy + 24, 5, 16);  // leg 2
-  ctx.fillRect(dx - 10, dy + 8, 10, 5);   // tail
+  ctx.fillRect(dx, dy, 22, 24);
+  ctx.fillRect(dx + 12, dy - 12, 14, 14);
+  ctx.fillRect(dx + 4, dy + 24, 5, 16);
+  ctx.fillRect(dx + 14, dy + 24, 5, 16);
+  ctx.fillRect(dx - 10, dy + 8, 10, 5);
 
   ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
-  ctx.fillRect(dx + 20, dy - 8, 2, 2); // eye
+  ctx.fillRect(dx + 20, dy - 8, 2, 2);
 }
 
 function drawPlayer() {
-  const dark = document.body.classList.contains("dark");
-  function drawPlayer(){
+  mothFrameTimer++;
 
-mothFrameTimer++;
-
-if(mothFrameTimer > 6){
+  if (mothFrameTimer > 6) {
     mothFrameTimer = 0;
     mothFrame++;
-    if(mothFrame >= mothFrames.length){
-        mothFrame = 0;
+
+    if (mothFrame >= mothFrames.length) {
+      mothFrame = 0;
     }
-}
+  }
 
-ctx.drawImage(
-    mothFrames[mothFrame],
-    player.x,
-    player.y,
-    player.w,
-    player.h
-);
+  const img = mothFrames[mothFrame];
 
-}
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, player.x, player.y, player.w, player.h);
+  } else {
+    const dark = document.body.classList.contains("dark");
+    ctx.fillStyle = dark ? "#f1f1f1" : "#303030";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+  }
 }
 
 function drawObstacles() {
@@ -388,8 +381,6 @@ function drawObstacles() {
   for (let i = 0; i < obstacles.length; i++) {
     const o = obstacles[i];
     ctx.fillRect(o.x, o.y, o.w, o.h);
-
-    // Simple cactus arms
     ctx.fillRect(o.x - 6, o.y + 14, 6, 8);
     ctx.fillRect(o.x + o.w, o.y + 8, 6, 8);
   }
