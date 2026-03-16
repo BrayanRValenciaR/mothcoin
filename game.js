@@ -1,239 +1,193 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const scoreText = document.getElementById("scoreText");
-const bestText = document.getElementById("bestText");
-const panelTitle = document.querySelector(".panel-title");
-const panelSubtitle = document.querySelector(".panel-subtitle");
+const tapLeft = document.getElementById("tapLeft");
+const tapRight = document.getElementById("tapRight");
 
 const W = canvas.width;
 const H = canvas.height;
 
-// Ground
 const groundY = H - 40;
 
-// Player
 const player = {
-  x: 80,
-  y: groundY - 40,
-  w: 32,
-  h: 40,
-  vy: 0,
-  onGround: true,
+x:80,
+y:groundY-40,
+w:32,
+h:40,
+vy:0,
+onGround:true
 };
 
-// Moth images
-const moth1 = new Image();
-const moth2 = new Image();
-const moth3 = new Image();
+let obstacles=[];
+let speed=6;
+let gravity=0.75;
+let jumpPower=13;
 
-moth1.src = "moth1.png";
-moth2.src = "moth2.png";
-moth3.src = "moth3.png";
+let spawnTimer=0;
+let spawnEvery=70;
 
-const mothFrames = [moth1, moth2, moth3, moth2];
-let mothFrame = 0;
-let mothTimer = 0;
+let score=0;
+let best=0;
 
-// Game state
-let obstacles = [];
-let speed = 6;
-let gravity = 0.75;
-let jumpPower = 13;
-let spawnTimer = 0;
-let spawnEvery = 70;
-let score = 0;
-let best = 0;
-let gameOver = false;
-let gameStarted = false;
+let gameStarted=false;
+let gameOver=false;
 
-// Utilities
-function rectsOverlap(a, b) {
-  return (
-    a.x < b.x + b.w &&
-    a.x + a.w > b.x &&
-    a.y < b.y + b.h &&
-    a.y + a.h > b.y
-  );
+function rectsOverlap(a,b){
+
+return(
+a.x < b.x + b.w &&
+a.x + a.w > b.x &&
+a.y < b.y + b.h &&
+a.y + a.h > b.y
+);
+
 }
 
-function updatePanel() {
-  scoreText.textContent = score;
-  bestText.textContent = best;
+function resetGame(){
 
-  if (gameOver) {
-    panelTitle.textContent = "Game Over";
-    panelSubtitle.textContent = "Tap to play";
-  } else if (!gameStarted) {
-    panelTitle.textContent = "Tap to Start";
-    panelSubtitle.textContent = "Tap / Space / Up Arrow to Jump";
-  } else {
-    panelTitle.textContent = "Mothcoin";
-    panelSubtitle.textContent = "Stay alive and keep scoring";
-  }
+obstacles=[];
+speed=6;
+score=0;
+spawnTimer=0;
+gameOver=false;
+
+player.y=groundY-40;
+player.vy=0;
+player.onGround=true;
+
 }
 
-function resetGame() {
-  obstacles = [];
-  speed = 6;
-  spawnTimer = 0;
-  spawnEvery = 70;
-  score = 0;
-  gameOver = false;
-  gameStarted = false;
+function jump(){
 
-  player.y = groundY - player.h;
-  player.vy = 0;
-  player.onGround = true;
+if(!gameStarted){
 
-  mothFrame = 0;
-  mothTimer = 0;
+gameStarted=true;
+return;
 
-  updatePanel();
 }
 
-function jump() {
-  if (!gameStarted) {
-    gameStarted = true;
-    updatePanel();
-  }
-
-  if (gameOver) {
-    resetGame();
-    gameStarted = true;
-    updatePanel();
-    return;
-  }
-
-  if (player.onGround) {
-    player.vy = -jumpPower;
-    player.onGround = false;
-  }
-}
-
-// Input
-window.addEventListener("keydown", (e) => {
-  if (e.code === "Space" || e.code === "ArrowUp") jump();
-  if (e.code === "KeyR") resetGame();
-});
-
-canvas.addEventListener("pointerdown", jump);
-
-// Spawn obstacle
-function spawnObstacle() {
-  const h = 30 + Math.floor(Math.random() * 35);
-  const w = 18 + Math.floor(Math.random() * 18);
-
-  obstacles.push({
-    x: W + 20,
-    y: groundY - h,
-    w,
-    h,
-    passed: false,
-  });
-}
-
-// Update
-function update() {
-  if (!gameStarted || gameOver) return;
-
-  player.vy += gravity;
-  player.y += player.vy;
-
-  if (player.y >= groundY - player.h) {
-    player.y = groundY - player.h;
-    player.vy = 0;
-    player.onGround = true;
-  }
-
-  spawnTimer++;
-  if (spawnTimer >= spawnEvery) {
-    spawnTimer = 0;
-    spawnObstacle();
-    spawnEvery = 55 + Math.floor(Math.random() * 40);
-  }
-
-  for (const o of obstacles) {
-    o.x -= speed;
-
-    if (!o.passed && o.x + o.w < player.x) {
-      o.passed = true;
-      score += 1;
-      updatePanel();
-
-      if (score % 10 === 0) {
-        speed += 0.6;
-      }
-    }
-  }
-
-  obstacles = obstacles.filter((o) => o.x + o.w > -40);
-
-  for (const o of obstacles) {
-    if (rectsOverlap(player, o)) {
-      gameOver = true;
-      best = Math.max(best, score);
-      updatePanel();
-      break;
-    }
-  }
-
-  // Moth animation
-  mothTimer++;
-  if (mothTimer > 8) {
-    mothTimer = 0;
-    mothFrame++;
-    if (mothFrame >= mothFrames.length) {
-      mothFrame = 0;
-    }
-  }
-}
-
-// Draw
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-
-  // Background
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, W, H);
-
-  // Ground
-  ctx.strokeStyle = "#888";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, groundY);
-  ctx.lineTo(W, groundY);
-  ctx.stroke();
-
-  // Player moth
-  const currentMoth = mothFrames[mothFrame];
-  if (currentMoth.complete) {
-    ctx.drawImage(currentMoth, player.x, player.y, player.w, player.h);
-  } else {
-    ctx.fillStyle = "#f5f5f5";
-    ctx.fillRect(player.x, player.y, player.w, player.h);
-  }
-
-  // Obstacles
-  ctx.fillStyle = "#2faa52";
-  for (const o of obstacles) {
-    ctx.fillRect(o.x, o.y, o.w, o.h);
-  }
-
-  // Game over overlay
-  if (gameOver) {
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.fillRect(0, 0, W, H);
-  }
-}
-
-// Loop
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
+if(gameOver){
 
 resetGame();
-updatePanel();
+return;
+
+}
+
+if(player.onGround){
+
+player.vy=-jumpPower;
+player.onGround=false;
+
+}
+
+}
+
+tapLeft.addEventListener("touchstart",jump);
+tapRight.addEventListener("touchstart",jump);
+
+tapLeft.addEventListener("mousedown",jump);
+tapRight.addEventListener("mousedown",jump);
+
+function spawnObstacle(){
+
+obstacles.push({
+
+x:W,
+y:groundY-30,
+w:20,
+h:30
+
+});
+
+}
+
+function update(){
+
+if(!gameStarted)return;
+
+if(gameOver)return;
+
+player.vy+=gravity;
+player.y+=player.vy;
+
+if(player.y+player.h>=groundY){
+
+player.y=groundY-player.h;
+player.vy=0;
+player.onGround=true;
+
+}
+
+spawnTimer++;
+
+if(spawnTimer>spawnEvery){
+
+spawnTimer=0;
+spawnObstacle();
+
+}
+
+for(let o of obstacles){
+
+o.x-=speed;
+
+if(rectsOverlap(player,o)){
+
+gameOver=true;
+
+}
+
+}
+
+obstacles=obstacles.filter(o=>o.x+o.w>0);
+
+score++;
+
+if(score>best){
+
+best=score;
+
+}
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,W,H);
+
+ctx.fillStyle="#333";
+ctx.fillRect(0,groundY,W,2);
+
+ctx.fillStyle="black";
+ctx.fillRect(player.x,player.y,player.w,player.h);
+
+ctx.fillStyle="green";
+
+for(let o of obstacles){
+
+ctx.fillRect(o.x,o.y,o.w,o.h);
+
+}
+
+ctx.fillStyle="black";
+ctx.fillText("Score "+score,10,20);
+ctx.fillText("Best "+best,10,40);
+
+if(gameOver){
+
+ctx.fillText("Game Over",160,200);
+ctx.fillText("Tap to play again",140,220);
+
+}
+
+}
+
+function loop(){
+
+update();
+draw();
+requestAnimationFrame(loop);
+
+}
+
 loop();
