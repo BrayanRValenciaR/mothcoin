@@ -14,7 +14,7 @@ let mothFrame = 0;
 let mothFrameTimer = 0;
 
 let cloudOffset = 0;
-const cloudSpeed = 0.25;
+const cloudSpeed = 0.15;
 
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
