@@ -240,7 +240,7 @@ function drawSky() {
 function drawCloud(x, y, scale) {
   const dark = document.body.classList.contains("dark");
 
-  ctx.fillStyle = dark ? "#6f6f6f" : "#ffffff";
+  ctx.fillStyle = dark ? "#8a8a8a" : "#ffffff";
 
   ctx.beginPath();
 
