@@ -1,4 +1,4 @@
-const CACHE = "Mothcoin-v9";
+const CACHE = "Mothcoin-v10";
 const ASSETS = [
   "/",
   "/index.html",
