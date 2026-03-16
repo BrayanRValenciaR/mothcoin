@@ -207,10 +207,19 @@ function drawSky() {
   ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
   ctx.fillRect(0, 0, W, H);
 
+  // moon / sun
+ctx.beginPath();
+ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
+ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
+ctx.fill();
+
+// crescent shadow to make it moon-like
+if (dark) {
   ctx.beginPath();
-  ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
-  ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
+  ctx.fillStyle = "#1a1a1a";
+  ctx.arc(W - 60, 78, 30, 0, Math.PI * 2);
   ctx.fill();
+}
 
   drawCloud(70, 150, 1.1);
   drawCloud(250, 170, 0.8);
