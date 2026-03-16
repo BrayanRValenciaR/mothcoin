@@ -347,8 +347,27 @@ function drawMenuScene() {
 
 function drawPlayer() {
   const dark = document.body.classList.contains("dark");
-  ctx.fillStyle = dark ? "#f1f1f1" : "#303030";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
+  function drawPlayer(){
+
+mothFrameTimer++;
+
+if(mothFrameTimer > 6){
+    mothFrameTimer = 0;
+    mothFrame++;
+    if(mothFrame >= mothFrames.length){
+        mothFrame = 0;
+    }
+}
+
+ctx.drawImage(
+    mothFrames[mothFrame],
+    player.x,
+    player.y,
+    player.w,
+    player.h
+);
+
+}
 }
 
 function drawObstacles() {
