@@ -239,25 +239,38 @@ drawCloud(250 - cloudOffset * 1.0 + W + 140, 170, 0.8);
 drawCloud(345 - cloudOffset * 0.5 + W + 140, 330, 1.3);
 drawCloud(60 - cloudOffset * 0.85 + W + 140, 460, 0.95);
 }
-
 function drawCloud(x, y, scale) {
+
   const dark = document.body.classList.contains("dark");
+
+  // Fade calculation
+  let alpha = 1;
+
+  if (x < 80) {
+    alpha = x / 80;
+  }
+
+  if (x > W - 80) {
+    alpha = (W - x) / 80;
+  }
+
+  alpha = Math.max(0, Math.min(1, alpha));
+
+  ctx.globalAlpha = alpha;
 
   ctx.fillStyle = dark ? "#8a8a8a" : "#ffffff";
 
   ctx.beginPath();
 
-  // left puff
   ctx.arc(x - 28 * scale, y + 6 * scale, 18 * scale, 0, Math.PI * 2);
-
-  // middle puffs
   ctx.arc(x - 8 * scale, y - 4 * scale, 22 * scale, 0, Math.PI * 2);
   ctx.arc(x + 16 * scale, y - 2 * scale, 20 * scale, 0, Math.PI * 2);
-
-  // right puff
   ctx.arc(x + 38 * scale, y + 8 * scale, 16 * scale, 0, Math.PI * 2);
 
   ctx.fill();
+
+  ctx.globalAlpha = 1;
+}
 }
 
 function drawGround() {
