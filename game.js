@@ -1,337 +1,430 @@
-diff --git a/game.js b/game.js
-index c4a6b371698a88ca3284381eb186f9af61e5c020..1f602230d8ba3c78c2b19f1c507463c18fd9bfaa 100644
---- a/game.js
-+++ b/game.js
-@@ -1,193 +1,276 @@
- const canvas = document.getElementById("game");
- const ctx = canvas.getContext("2d");
- 
--const tapLeft = document.getElementById("tapLeft");
--const tapRight = document.getElementById("tapRight");
-+const jumpBtn = document.getElementById("jumpBtn");
-+const darkMode = document.getElementById("darkMode");
-+const lightMode = document.getElementById("lightMode");
- 
- const W = canvas.width;
- const H = canvas.height;
--
- const groundY = H - 40;
- 
- const player = {
--x:80,
--y:groundY-40,
--w:32,
--h:40,
-+x:70,
-+y:groundY-42,
-+w:34,
-+h:42,
- vy:0,
- onGround:true
- };
- 
- let obstacles=[];
-+let particles=[];
- let speed=6;
- let gravity=0.75;
- let jumpPower=13;
- 
- let spawnTimer=0;
- let spawnEvery=70;
- 
- let score=0;
- let best=0;
-+let level=1;
- 
- let gameStarted=false;
- let gameOver=false;
- 
- function rectsOverlap(a,b){
--
- return(
- a.x < b.x + b.w &&
- a.x + a.w > b.x &&
- a.y < b.y + b.h &&
- a.y + a.h > b.y
- );
-+}
- 
-+function setTheme(mode){
-+if(mode === "dark"){
-+document.body.classList.add("dark");
-+}else{
-+document.body.classList.remove("dark");
-+}
- }
- 
--function resetGame(){
-+darkMode.addEventListener("click",()=>setTheme("dark"));
-+lightMode.addEventListener("click",()=>setTheme("light"));
- 
-+function resetGame(){
- obstacles=[];
-+particles=[];
- speed=6;
-+spawnEvery=70;
- score=0;
-+level=1;
- spawnTimer=0;
- gameOver=false;
- 
--player.y=groundY-40;
-+player.y=groundY-player.h;
- player.vy=0;
- player.onGround=true;
--
- }
- 
- function jump(){
--
- if(!gameStarted){
--
- gameStarted=true;
- return;
--
- }
- 
- if(gameOver){
--
- resetGame();
- return;
--
- }
- 
- if(player.onGround){
--
- player.vy=-jumpPower;
- player.onGround=false;
--
-+for(let i=0;i<8;i++){
-+particles.push({
-+x:player.x+8,
-+y:groundY-2,
-+vx:-Math.random()*2,
-+vy:-Math.random()*1.8,
-+life:24
-+});
-+}
-+}
- }
- 
-+jumpBtn.addEventListener("touchstart",jump);
-+jumpBtn.addEventListener("mousedown",jump);
-+window.addEventListener("keydown",(e)=>{
-+if(e.code==="Space" || e.code==="ArrowUp"){
-+e.preventDefault();
-+jump();
- }
-+});
- 
--tapLeft.addEventListener("touchstart",jump);
--tapRight.addEventListener("touchstart",jump);
-+function spawnObstacle(){
-+const typeRoll=Math.random();
- 
--tapLeft.addEventListener("mousedown",jump);
--tapRight.addEventListener("mousedown",jump);
-+if(typeRoll<0.4){
-+obstacles.push({type:"box",x:W,y:groundY-30,w:22,h:30,vy:0});
-+return;
-+}
- 
--function spawnObstacle(){
-+if(typeRoll<0.75){
-+const tall=42+Math.floor(Math.random()*22);
-+obstacles.push({type:"pillar",x:W,y:groundY-tall,w:18,h:tall,vy:0});
-+return;
-+}
- 
- obstacles.push({
--
-+type:"hopper",
- x:W,
--y:groundY-30,
--w:20,
--h:30
--
-+y:groundY-24,
-+w:24,
-+h:24,
-+vy:-(7+Math.random()*2)
- });
-+}
- 
-+function updateDifficulty(){
-+level=1+Math.floor(score/700);
-+speed=6+Math.min(5,level*0.45);
-+spawnEvery=Math.max(38,70-level*3);
- }
- 
- function update(){
--
- if(!gameStarted)return;
--
- if(gameOver)return;
- 
-+updateDifficulty();
-+
- player.vy+=gravity;
- player.y+=player.vy;
- 
- if(player.y+player.h>=groundY){
--
- player.y=groundY-player.h;
- player.vy=0;
- player.onGround=true;
--
- }
- 
- spawnTimer++;
--
- if(spawnTimer>spawnEvery){
--
- spawnTimer=0;
- spawnObstacle();
--
- }
- 
- for(let o of obstacles){
--
- o.x-=speed;
- 
--if(rectsOverlap(player,o)){
-+if(o.type==="hopper"){
-+o.vy+=0.45;
-+o.y+=o.vy;
-+if(o.y+o.h>=groundY){
-+o.y=groundY-o.h;
-+o.vy=-(6+Math.random()*1.5);
-+}
-+}
- 
-+if(rectsOverlap(player,o)){
- gameOver=true;
--
-+}
- }
- 
-+for(let p of particles){
-+p.x+=p.vx;
-+p.y+=p.vy;
-+p.vy+=0.08;
-+p.life--;
- }
- 
-+particles=particles.filter(p=>p.life>0);
- obstacles=obstacles.filter(o=>o.x+o.w>0);
- 
- score++;
-+if(score>best){best=score;}
-+}
- 
--if(score>best){
-+function drawBackground(){
-+ctx.clearRect(0,0,W,H);
- 
--best=score;
-+const isDark=document.body.classList.contains("dark");
-+ctx.fillStyle=isDark?"#171b24":"#f4f8ff";
-+ctx.fillRect(0,0,W,H);
- 
-+ctx.fillStyle=isDark?"#2a3040":"#d8e7ff";
-+for(let i=0;i<7;i++){
-+const x=(i*78 + (score*0.22)%78)%(W+50)-50;
-+const y=35+(i%3)*26;
-+ctx.fillRect(x,y,26,10);
-+ctx.fillRect(x+10,y-8,22,10);
- }
--
- }
- 
--function draw(){
--
--ctx.clearRect(0,0,W,H);
--
--ctx.fillStyle="#333";
-+function drawGround(){
-+ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--ground').trim() || "#333";
- ctx.fillRect(0,groundY,W,2);
-+}
- 
--ctx.fillStyle="black";
-+function drawPlayer(){
-+ctx.fillStyle=document.body.classList.contains("dark")?"#f3f4f6":"#111";
- ctx.fillRect(player.x,player.y,player.w,player.h);
-+ctx.fillStyle="#f59e0b";
-+ctx.fillRect(player.x+4,player.y+9,7,7);
-+}
- 
--ctx.fillStyle="green";
--
-+function drawObstacles(){
- for(let o of obstacles){
--
-+if(o.type==="box") ctx.fillStyle="#16a34a";
-+if(o.type==="pillar") ctx.fillStyle="#15803d";
-+if(o.type==="hopper") ctx.fillStyle="#0f766e";
- ctx.fillRect(o.x,o.y,o.w,o.h);
-+}
-+}
- 
-+function drawParticles(){
-+ctx.fillStyle="#9ca3af";
-+for(let p of particles){
-+ctx.fillRect(p.x,p.y,3,3);
-+}
- }
- 
--ctx.fillStyle="black";
-+function drawHud(){
-+ctx.fillStyle=document.body.classList.contains("dark")?"#e5e7eb":"#111";
-+ctx.font="14px sans-serif";
- ctx.fillText("Score "+score,10,20);
- ctx.fillText("Best "+best,10,40);
-+ctx.fillText("Level "+level,10,60);
-+}
- 
--if(gameOver){
-+function drawMessages(){
-+ctx.fillStyle=document.body.classList.contains("dark")?"#e5e7eb":"#111";
- 
--ctx.fillText("Game Over",160,200);
--ctx.fillText("Tap to play again",140,220);
-+if(!gameStarted){
-+ctx.font="bold 20px sans-serif";
-+ctx.fillText("Mothcoin Runner",120,180);
-+ctx.font="14px sans-serif";
-+ctx.fillText("Press Jump or Space to start",105,208);
-+return;
-+}
- 
-+if(gameOver){
-+ctx.font="bold 22px sans-serif";
-+ctx.fillText("Game Over",140,190);
-+ctx.font="14px sans-serif";
-+ctx.fillText("Press Jump to play again",120,214);
-+}
- }
- 
-+function draw(){
-+drawBackground();
-+drawGround();
-+drawPlayer();
-+drawObstacles();
-+drawParticles();
-+drawHud();
-+drawMessages();
- }
- 
- function loop(){
--
- update();
- draw();
- requestAnimationFrame(loop);
--
- }
- 
- loop();
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const menuUI = document.getElementById("menuUI");
+const controls = document.getElementById("controls");
+const hintText = document.getElementById("hintText");
+
+const playBtn = document.getElementById("playBtn");
+const exitBtn = document.getElementById("exitBtn");
+const jumpBtn = document.getElementById("jumpBtn");
+const darkToggle = document.getElementById("darkToggle");
+
+const W = canvas.width;
+const H = canvas.height;
+
+const groundY = H - 120;
+
+let scene = "menu"; // menu | game | gameover
+
+const player = {
+  x: 68,
+  y: groundY - 42,
+  w: 34,
+  h: 42,
+  vy: 0,
+  onGround: true
+};
+
+let obstacles = [];
+let speed = 6;
+let gravity = 0.75;
+let jumpPower = 13;
+let spawnTimer = 0;
+let spawnEvery = 85;
+let score = 0;
+let best = Number(localStorage.getItem("mothcoin-best") || 0);
+
+function setTheme() {
+  if (darkToggle.checked) {
+    document.body.classList.add("dark");
+  } else {
+    document.body.classList.remove("dark");
+  }
+}
+
+darkToggle.addEventListener("change", setTheme);
+
+function showMenuUI(show) {
+  menuUI.style.display = show ? "flex" : "none";
+}
+
+function showControls(show) {
+  controls.classList.toggle("show", show);
+  hintText.classList.toggle("show", show);
+}
+
+function resetGame() {
+  obstacles = [];
+  speed = 6;
+  spawnEvery = 85;
+  spawnTimer = 0;
+  score = 0;
+
+  player.x = 68;
+  player.y = groundY - player.h;
+  player.vy = 0;
+  player.onGround = true;
+}
+
+function startGame() {
+  resetGame();
+  scene = "game";
+  showMenuUI(false);
+  showControls(true);
+}
+
+function goToMenu() {
+  scene = "menu";
+  showMenuUI(true);
+  showControls(false);
+}
+
+function jump() {
+  if (scene === "menu") {
+    startGame();
+    return;
+  }
+
+  if (scene === "gameover") {
+    startGame();
+    return;
+  }
+
+  if (scene !== "game") return;
+
+  if (player.onGround) {
+    player.vy = -jumpPower;
+    player.onGround = false;
+  }
+}
+
+playBtn.addEventListener("click", startGame);
+
+exitBtn.addEventListener("click", () => {
+  goToMenu();
+});
+
+jumpBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  jump();
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    e.preventDefault();
+    if (!e.repeat) jump();
+  }
+});
+
+function rectsOverlap(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
+}
+
+function spawnObstacle() {
+  const sizeRoll = Math.random();
+
+  if (sizeRoll < 0.5) {
+    obstacles.push({
+      x: W + 20,
+      y: groundY - 30,
+      w: 22,
+      h: 30
+    });
+  } else {
+    obstacles.push({
+      x: W + 20,
+      y: groundY - 42,
+      w: 18,
+      h: 42
+    });
+  }
+}
+
+function updateDifficulty() {
+  speed = 6 + Math.min(4, Math.floor(score / 250) * 0.35);
+  spawnEvery = Math.max(52, 85 - Math.floor(score / 180) * 2);
+}
+
+function updateGame() {
+  updateDifficulty();
+
+  player.vy += gravity;
+  player.y += player.vy;
+
+  if (player.y + player.h >= groundY) {
+    player.y = groundY - player.h;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  spawnTimer++;
+  if (spawnTimer >= spawnEvery) {
+    spawnTimer = 0;
+    spawnObstacle();
+  }
+
+  for (let i = 0; i < obstacles.length; i++) {
+    const o = obstacles[i];
+    o.x -= speed;
+
+    if (rectsOverlap(player, o)) {
+      scene = "gameover";
+      showControls(true);
+      if (score > best) {
+        best = score;
+        localStorage.setItem("mothcoin-best", best);
+      }
+    }
+  }
+
+  obstacles = obstacles.filter((o) => o.x + o.w > 0);
+
+  if (scene === "game") {
+    score++;
+    if (score > best) {
+      best = score;
+      localStorage.setItem("mothcoin-best", best);
+    }
+  }
+}
+
+function drawSky() {
+  const dark = document.body.classList.contains("dark");
+
+  ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
+  ctx.fillRect(0, 0, W, H);
+
+  // Sun / moon
+  ctx.beginPath();
+  ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
+  ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Balloon
+  ctx.fillStyle = "#ef4444";
+  ctx.beginPath();
+  ctx.arc(110, 120, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = dark ? "#bbbbbb" : "#9a9a9a";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(110, 134);
+  ctx.lineTo(113, 168);
+  ctx.stroke();
+
+  // Clouds
+  drawCloud(70, 150, 1.1);
+  drawCloud(250, 170, 0.8);
+  drawCloud(345, 330, 1.3);
+  drawCloud(60, 460, 0.95);
+}
+
+function drawCloud(x, y, scale) {
+  const dark = document.body.classList.contains("dark");
+  ctx.strokeStyle = dark ? "#8a8a8a" : "#bdbdbd";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(x - 40 * scale, y + 10 * scale);
+  ctx.quadraticCurveTo(x - 20 * scale, y - 18 * scale, x + 5 * scale, y + 4 * scale);
+  ctx.quadraticCurveTo(x + 18 * scale, y - 22 * scale, x + 35 * scale, y + 4 * scale);
+  ctx.quadraticCurveTo(x + 55 * scale, y - 4 * scale, x + 70 * scale, y + 10 * scale);
+  ctx.lineTo(x - 40 * scale, y + 10 * scale);
+  ctx.stroke();
+}
+
+function drawGround() {
+  const dark = document.body.classList.contains("dark");
+
+  ctx.strokeStyle = dark ? "#d0d0d0" : "#5a5a5a";
+  ctx.lineWidth = 3;
+
+  // Main ground line
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  ctx.lineTo(W, groundY);
+  ctx.stroke();
+
+  // Bottom dirt line
+  ctx.beginPath();
+  ctx.moveTo(0, groundY + 34);
+  ctx.lineTo(W, groundY + 34);
+  ctx.stroke();
+
+  // Sand dots
+  for (let i = 0; i < 40; i++) {
+    const x = (i * 18 + (scene === "game" ? score * 0.8 : 0)) % (W + 20);
+    const drawX = W - x;
+    ctx.fillStyle = dark ? "#bdbdbd" : "#727272";
+    ctx.fillRect(drawX, groundY + 18 + (i % 3), 3, 2);
+  }
+}
+
+function drawFence() {
+  const dark = document.body.classList.contains("dark");
+  const baseX = 240;
+  const baseY = groundY;
+
+  ctx.strokeStyle = dark ? "#bbbbbb" : "#9b9b9b";
+  ctx.lineWidth = 3;
+
+  ctx.strokeRect(baseX, baseY - 54, 110, 50);
+
+  for (let i = 1; i < 4; i++) {
+    const x = baseX + i * 27;
+    ctx.beginPath();
+    ctx.moveTo(x, baseY - 58);
+    ctx.lineTo(x, baseY);
+    ctx.stroke();
+  }
+
+  for (let i = 1; i < 3; i++) {
+    const y = baseY - i * 16;
+    ctx.beginPath();
+    ctx.moveTo(baseX, y);
+    ctx.lineTo(baseX + 110, y);
+    ctx.stroke();
+  }
+}
+
+function drawDecorCactus(x, h) {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#dddddd" : "#585858";
+
+  const y = groundY - h;
+
+  ctx.fillRect(x, y, 10, h);
+  ctx.fillRect(x - 8, y + 18, 8, 10);
+  ctx.fillRect(x + 10, y + 10, 8, 10);
+}
+
+function drawRocks() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#cfcfcf" : "#686868";
+
+  ctx.fillRect(185, groundY - 6, 20, 6);
+  ctx.fillRect(188, groundY - 12, 12, 6);
+
+  ctx.fillRect(394, groundY - 8, 18, 8);
+  ctx.fillRect(404, groundY - 14, 10, 6);
+
+  ctx.fillRect(154, groundY - 4, 6, 4);
+}
+
+function drawMenuScene() {
+  drawSky();
+  drawGround();
+  drawFence();
+  drawDecorCactus(90, 34);
+  drawDecorCactus(365, 42);
+  drawDecorCactus(389, 26);
+  drawRocks();
+
+  // Decorative square dino
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#e9e9e9" : "#4c4c4c";
+
+  const dx = 28;
+  const dy = groundY - 38;
+
+  ctx.fillRect(dx, dy, 22, 24);        // body
+  ctx.fillRect(dx + 12, dy - 12, 14, 14); // head
+  ctx.fillRect(dx + 4, dy + 24, 5, 16);   // leg 1
+  ctx.fillRect(dx + 14, dy + 24, 5, 16);  // leg 2
+  ctx.fillRect(dx - 10, dy + 8, 10, 5);   // tail
+
+  ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
+  ctx.fillRect(dx + 20, dy - 8, 2, 2); // eye
+}
+
+function drawPlayer() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#f1f1f1" : "#303030";
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+}
+
+function drawObstacles() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#f1f1f1" : "#3f3f3f";
+
+  for (let i = 0; i < obstacles.length; i++) {
+    const o = obstacles[i];
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+
+    // Simple cactus arms
+    ctx.fillRect(o.x - 6, o.y + 14, 6, 8);
+    ctx.fillRect(o.x + o.w, o.y + 8, 6, 8);
+  }
+}
+
+function drawHud() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#f1f1f1" : "#2b2b2b";
+  ctx.font = "bold 18px Arial";
+  ctx.fillText("SCORE " + score, 16, 34);
+  ctx.fillText("BEST " + best, 16, 58);
+}
+
+function drawGameOverText() {
+  if (scene !== "gameover") return;
+
+  const dark = document.body.classList.contains("dark");
+
+  ctx.fillStyle = dark ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.45)";
+  ctx.fillRect(60, 230, 300, 110);
+
+  ctx.strokeStyle = dark ? "#dddddd" : "#444444";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(60, 230, 300, 110);
+
+  ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
+  ctx.textAlign = "center";
+
+  ctx.font = "bold 26px Arial";
+  ctx.fillText("GAME OVER", W / 2, 273);
+
+  ctx.font = "bold 16px Arial";
+  ctx.fillText("Press JUMP or SPACE to restart", W / 2, 308);
+
+  ctx.textAlign = "left";
+}
+
+function drawGameScene() {
+  drawSky();
+  drawGround();
+  drawPlayer();
+  drawObstacles();
+  drawHud();
+  drawGameOverText();
+}
+
+function update() {
+  if (scene === "game") {
+    updateGame();
+  }
+}
+
+function draw() {
+  if (scene === "menu") {
+    drawMenuScene();
+  } else {
+    drawGameScene();
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+setTheme();
+goToMenu();
+loop();
