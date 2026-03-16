@@ -17,7 +17,6 @@ const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
 
 const playBtn = document.getElementById("playBtn");
-const exitBtn = document.getElementById("exitBtn");
 const jumpBtn = document.getElementById("jumpBtn");
 const darkToggle = document.getElementById("darkToggle");
 
@@ -110,10 +109,6 @@ function jump() {
 }
 
 playBtn.addEventListener("click", startGame);
-
-exitBtn.addEventListener("click", () => {
-  goToMenu();
-});
 
 jumpBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
