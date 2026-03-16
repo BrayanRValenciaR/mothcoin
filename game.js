@@ -229,15 +229,15 @@ function drawSky() {
     ctx.arc(W - 74, 92, 5, 0, Math.PI * 2);
     ctx.fill();
   }
-  drawCloud(70 - cloudOffset, 150, 1.1);
-drawCloud(250 - cloudOffset, 170, 0.8);
-drawCloud(345 - cloudOffset, 330, 1.3);
-drawCloud(60 - cloudOffset, 460, 0.95);
+drawCloud(70 - cloudOffset * 0.7, 150, 1.1);
+drawCloud(250 - cloudOffset * 1.0, 170, 0.8);
+drawCloud(345 - cloudOffset * 0.5, 330, 1.3);
+drawCloud(60 - cloudOffset * 0.85, 460, 0.95);
 
-drawCloud(70 - cloudOffset + W + 140, 150, 1.1);
-drawCloud(250 - cloudOffset + W + 140, 170, 0.8);
-drawCloud(345 - cloudOffset + W + 140, 330, 1.3);
-drawCloud(60 - cloudOffset + W + 140, 460, 0.95);
+drawCloud(70 - cloudOffset * 0.7 + W + 140, 150, 1.1);
+drawCloud(250 - cloudOffset * 1.0 + W + 140, 170, 0.8);
+drawCloud(345 - cloudOffset * 0.5 + W + 140, 330, 1.3);
+drawCloud(60 - cloudOffset * 0.85 + W + 140, 460, 0.95);
 }
 
 function drawCloud(x, y, scale) {
