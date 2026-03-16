@@ -422,7 +422,7 @@ function drawGameOverText() {
   ctx.fillText("GAME OVER", W / 2, 273);
 
   ctx.font = "bold 16px Arial";
-  ctx.fillText("Press JUMP or SPACE to restart", W / 2, 308);
+  ctx.fillText("Press JUMP to restart", W / 2, 308);
 
   ctx.textAlign = "left";
 }
