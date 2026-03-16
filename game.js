@@ -15,7 +15,6 @@ let mothFrameTimer = 0;
 
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
-const hintText = document.getElementById("hintText");
 
 const playBtn = document.getElementById("playBtn");
 const exitBtn = document.getElementById("exitBtn");
@@ -63,7 +62,6 @@ function showMenuUI(show) {
 
 function showControls(show) {
   controls.classList.toggle("show", show);
-  hintText.classList.toggle("show", show);
 }
 
 function resetGame() {
