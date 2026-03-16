@@ -18,17 +18,15 @@ const cloudSpeed = 0.15;
 
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
-
 const playBtn = document.getElementById("playBtn");
 const jumpBtn = document.getElementById("jumpBtn");
 const darkToggle = document.getElementById("darkToggle");
 
 const W = canvas.width;
 const H = canvas.height;
-
 const groundY = H - 120;
 
-let scene = "menu"; // menu | game | gameover
+let scene = "menu";
 
 const player = {
   x: 68,
@@ -210,7 +208,6 @@ function drawSky() {
   ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
   ctx.fillRect(0, 0, W, H);
 
-    // moon / sun
   ctx.beginPath();
   ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
   ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
@@ -219,7 +216,7 @@ function drawSky() {
   if (dark) {
     ctx.beginPath();
     ctx.fillStyle = "#1a1a1a";
-    ctx.arc(W - 40, 78, 30, 0, Math.PI * 2);
+    ctx.arc(W - 60, 78, 30, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "rgba(120,120,100,0.28)";
@@ -229,21 +226,21 @@ function drawSky() {
     ctx.arc(W - 74, 92, 5, 0, Math.PI * 2);
     ctx.fill();
   }
-drawCloud(70 - cloudOffset * 0.7, 150, 1.1);
-drawCloud(250 - cloudOffset * 1.0, 170, 0.8);
-drawCloud(345 - cloudOffset * 0.5, 330, 1.3);
-drawCloud(60 - cloudOffset * 0.85, 460, 0.95);
 
-drawCloud(70 - cloudOffset * 0.7 + W + 140, 150, 1.1);
-drawCloud(250 - cloudOffset * 1.0 + W + 140, 170, 0.8);
-drawCloud(345 - cloudOffset * 0.5 + W + 140, 330, 1.3);
-drawCloud(60 - cloudOffset * 0.85 + W + 140, 460, 0.95);
+  drawCloud(70 - cloudOffset * 0.7, 150, 1.1);
+  drawCloud(250 - cloudOffset * 1.0, 170, 0.8);
+  drawCloud(345 - cloudOffset * 0.5, 330, 1.3);
+  drawCloud(60 - cloudOffset * 0.85, 460, 0.95);
+
+  drawCloud(70 - cloudOffset * 0.7 + W + 140, 150, 1.1);
+  drawCloud(250 - cloudOffset * 1.0 + W + 140, 170, 0.8);
+  drawCloud(345 - cloudOffset * 0.5 + W + 140, 330, 1.3);
+  drawCloud(60 - cloudOffset * 0.85 + W + 140, 460, 0.95);
 }
-function drawCloud(x, y, scale) {
 
+function drawCloud(x, y, scale) {
   const dark = document.body.classList.contains("dark");
 
-  // Fade calculation
   let alpha = 1;
 
   if (x < 80) {
@@ -257,16 +254,13 @@ function drawCloud(x, y, scale) {
   alpha = Math.max(0, Math.min(1, alpha));
 
   ctx.globalAlpha = alpha;
-
   ctx.fillStyle = dark ? "#8a8a8a" : "#ffffff";
 
   ctx.beginPath();
-
   ctx.arc(x - 28 * scale, y + 6 * scale, 18 * scale, 0, Math.PI * 2);
   ctx.arc(x - 8 * scale, y - 4 * scale, 22 * scale, 0, Math.PI * 2);
   ctx.arc(x + 16 * scale, y - 2 * scale, 20 * scale, 0, Math.PI * 2);
   ctx.arc(x + 38 * scale, y + 8 * scale, 16 * scale, 0, Math.PI * 2);
-
   ctx.fill();
 
   ctx.globalAlpha = 1;
@@ -449,17 +443,15 @@ function drawGameScene() {
 }
 
 function update() {
-
   cloudOffset += cloudSpeed;
 
-  if (cloudOffset > W + 120) {
+  if (cloudOffset > W + 140) {
     cloudOffset = 0;
   }
 
   if (scene === "game") {
     updateGame();
   }
-
 }
 
 function draw() {
