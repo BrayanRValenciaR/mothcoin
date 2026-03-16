@@ -271,7 +271,6 @@ function drawCloud(x, y, scale) {
 
   ctx.globalAlpha = 1;
 }
-}
 
 function drawGround() {
   const dark = document.body.classList.contains("dark");
