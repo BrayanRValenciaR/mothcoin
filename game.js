@@ -216,7 +216,7 @@ function drawSky() {
   if (dark) {
     ctx.beginPath();
     ctx.fillStyle = "#1a1a1a";
-    ctx.arc(W - 60, 78, 30, 0, Math.PI * 2);
+    ctx.arc(W - 40, 78, 30, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "rgba(120,120,100,0.28)";
