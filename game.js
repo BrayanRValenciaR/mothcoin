@@ -239,16 +239,23 @@ function drawSky() {
 
 function drawCloud(x, y, scale) {
   const dark = document.body.classList.contains("dark");
-  ctx.strokeStyle = dark ? "#8a8a8a" : "#bdbdbd";
-  ctx.lineWidth = 3;
+
+  ctx.fillStyle = dark ? "#6f6f6f" : "#ffffff";
 
   ctx.beginPath();
-  ctx.moveTo(x - 40 * scale, y + 10 * scale);
-  ctx.quadraticCurveTo(x - 20 * scale, y - 18 * scale, x + 5 * scale, y + 4 * scale);
-  ctx.quadraticCurveTo(x + 18 * scale, y - 22 * scale, x + 35 * scale, y + 4 * scale);
-  ctx.quadraticCurveTo(x + 55 * scale, y - 4 * scale, x + 70 * scale, y + 10 * scale);
-  ctx.lineTo(x - 40 * scale, y + 10 * scale);
-  ctx.stroke();
+
+  // left puff
+  ctx.arc(x - 28 * scale, y + 6 * scale, 18 * scale, 0, Math.PI * 2);
+
+  // middle puffs
+  ctx.arc(x - 8 * scale, y - 4 * scale, 22 * scale, 0, Math.PI * 2);
+  ctx.arc(x + 16 * scale, y - 2 * scale, 20 * scale, 0, Math.PI * 2);
+
+  // right puff
+  ctx.arc(x + 38 * scale, y + 8 * scale, 16 * scale, 0, Math.PI * 2);
+
+  ctx.fill();
+}
 }
 
 function drawGround() {
