@@ -1,72 +1,134 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Mothcoin</title>
-
-<style>
-
-body{
-margin:0;
-background:#ffffff;
-font-family:sans-serif;
-display:flex;
-flex-direction:column;
-height:100vh;
-overflow:hidden;
-}
-
-#gameArea{
-flex:1;
-display:flex;
-justify-content:center;
-align-items:center;
-}
-
-canvas{
-background:#ffffff;
-}
-
-#controls{
-height:160px;
-display:flex;
-justify-content:space-around;
-align-items:center;
-}
-
-.tapBtn{
-width:140px;
-height:120px;
-border-radius:30px;
-background:#777;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-font-weight:bold;
-font-size:18px;
-user-select:none;
-}
-
-</style>
-</head>
-
-<body>
-
-<div id="gameArea">
-<canvas id="game" width="400" height="400"></canvas>
-</div>
-
-<div id="controls">
-
-<div class="tapBtn" id="tapLeft">Tap</div>
-<div class="tapBtn" id="tapRight">Tap</div>
-
-</div>
-
-<script src="game.js"></script>
-
-</body>
-</html>
+diff --git a/index.html b/index.html
+index d01d8fa33153e2d60d8baa4ad740ee70f457cafb..dc40544bf3865f5ababb76205e6a88032faea403 100644
+--- a/index.html
++++ b/index.html
+@@ -1,72 +1,116 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+ <title>Mothcoin</title>
+ 
+ <style>
++:root{
++--bg:#ffffff;
++--text:#111111;
++--panel:#eeeeee;
++--btn:#777777;
++--btnText:#ffffff;
++--ground:#333333;
++}
+ 
+ body{
+ margin:0;
+-background:#ffffff;
++background:var(--bg);
++color:var(--text);
+ font-family:sans-serif;
+ display:flex;
+ flex-direction:column;
+ height:100vh;
+ overflow:hidden;
+ }
+ 
++#topBar{
++height:58px;
++display:flex;
++justify-content:flex-end;
++align-items:center;
++gap:10px;
++padding:8px 12px;
++background:var(--panel);
++box-sizing:border-box;
++}
++
++.modeBtn{
++border:none;
++border-radius:10px;
++padding:10px 12px;
++font-weight:bold;
++background:var(--btn);
++color:var(--btnText);
++cursor:pointer;
++}
++
+ #gameArea{
+ flex:1;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ }
+ 
+ canvas{
+-background:#ffffff;
++background:var(--bg);
++border:1px solid #d0d0d0;
+ }
+ 
+ #controls{
+-height:160px;
++height:110px;
+ display:flex;
+-justify-content:space-around;
++justify-content:flex-end;
+ align-items:center;
++padding:0 16px 16px 16px;
++box-sizing:border-box;
+ }
+ 
+ .tapBtn{
+ width:140px;
+-height:120px;
+-border-radius:30px;
+-background:#777;
+-color:white;
++height:80px;
++border-radius:24px;
++background:var(--btn);
++color:var(--btnText);
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ font-weight:bold;
+-font-size:18px;
++font-size:20px;
+ user-select:none;
+ }
+ 
++body.dark{
++--bg:#111318;
++--text:#e5e7eb;
++--panel:#1c1f27;
++--btn:#374151;
++--btnText:#f9fafb;
++--ground:#9ca3af;
++}
++
+ </style>
+ </head>
+ 
+ <body>
+ 
++<div id="topBar">
++<button class="modeBtn" id="lightMode">Light Mode</button>
++<button class="modeBtn" id="darkMode">Dark Mode</button>
++</div>
++
+ <div id="gameArea">
+ <canvas id="game" width="400" height="400"></canvas>
+ </div>
+ 
+ <div id="controls">
+-
+-<div class="tapBtn" id="tapLeft">Tap</div>
+-<div class="tapBtn" id="tapRight">Tap</div>
+-
++<div class="tapBtn" id="jumpBtn">Jump</div>
+ </div>
+ 
+ <script src="game.js"></script>
+ 
+ </body>
+ </html>
