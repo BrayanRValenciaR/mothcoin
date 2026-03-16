@@ -1,126 +1,72 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Mothcoin</title>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#ffffff" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<title>Mothcoin</title>
 
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-        height: 100%;
-      }
+<style>
 
-      body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: system-ui, Arial, sans-serif;
-      }
+body{
+margin:0;
+background:#ffffff;
+font-family:sans-serif;
+display:flex;
+flex-direction:column;
+height:100vh;
+overflow:hidden;
+}
 
-      #gameArea {
-        width: min(96vw, 900px);
-        background: #000000;
-        border-radius: 16px 16px 0 0;
-        padding: 12px 12px 0 12px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        box-sizing: border-box;
-      }
+#gameArea{
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+}
 
-      canvas {
-        width: 100%;
-        height: auto;
-        border: 1px solid #333;
-        border-radius: 12px 12px 0 0;
-        touch-action: manipulation;
-        display: block;
-        background: #000000;
-      }
+canvas{
+background:#ffffff;
+}
 
-      .bottomPanel {
-        width: min(96vw, 900px);
-        background: #f3f3f3;
-        border: 1px solid #d7d7d7;
-        border-top: none;
-        border-radius: 0 0 16px 16px;
-        padding: 14px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        min-height: 90px;
-        box-sizing: border-box;
-      }
+#controls{
+height:160px;
+display:flex;
+justify-content:space-around;
+align-items:center;
+}
 
-      .panel-left {
-        font-size: 13px;
-        color: #444;
-        line-height: 1.6;
-        min-width: 72px;
-      }
+.tapBtn{
+width:140px;
+height:120px;
+border-radius:30px;
+background:#777;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+font-weight:bold;
+font-size:18px;
+user-select:none;
+}
 
-      .panel-center {
-        flex: 1;
-        text-align: center;
-      }
+</style>
+</head>
 
-      .panel-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #222;
-        margin-bottom: 4px;
-      }
+<body>
 
-      .panel-subtitle {
-        font-size: 13px;
-        color: #666;
-      }
+<div id="gameArea">
+<canvas id="game" width="400" height="400"></canvas>
+</div>
 
-      .hint {
-        margin-top: 10px;
-        width: min(96vw, 900px);
-        text-align: center;
-        font-size: 13px;
-        color: #444;
-        user-select: none;
-        pointer-events: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="gameArea">
-      <canvas id="game" width="800" height="260"></canvas>
-    </div>
+<div id="controls">
 
-    <div class="bottomPanel">
-      <div class="panel-left">
-        <div>Score: <span id="scoreText">0</span></div>
-        <div>Best: <span id="bestText">0</span></div>
-      </div>
+<div class="tapBtn" id="tapLeft">Tap</div>
+<div class="tapBtn" id="tapRight">Tap</div>
 
-      <div class="panel-center">
-        <div class="panel-title">Tap to Start</div>
-        <div class="panel-subtitle">Tap / Space / Up Arrow to Jump</div>
-      </div>
-    </div>
+</div>
 
-    <div class="hint"> ... </div>
+<script src="game.js"></script>
 
-    <script src="./game.js"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/sw.js");
-      }
-    </script>
-  </body>
+</body>
 </html>
