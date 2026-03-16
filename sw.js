@@ -1,4 +1,4 @@
-const CACHE = "Mothcoin-v7.0.0.7";
+const CACHE = "Mothcoin-v8";
 const ASSETS = ["/", "/index.html", "/game.js", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (e) => {
