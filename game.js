@@ -13,6 +13,9 @@ const mothFrames = [moth1, moth2, moth3];
 let mothFrame = 0;
 let mothFrameTimer = 0;
 
+let cloudOffset = 0;
+const cloudSpeed = 0.25;
+
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
 
@@ -226,10 +229,15 @@ function drawSky() {
     ctx.arc(W - 74, 92, 5, 0, Math.PI * 2);
     ctx.fill();
   }
-  drawCloud(70, 150, 1.1);
-  drawCloud(250, 170, 0.8);
-  drawCloud(345, 330, 1.3);
-  drawCloud(60, 460, 0.95);
+  drawCloud(70 - cloudOffset, 150, 1.1);
+drawCloud(250 - cloudOffset, 170, 0.8);
+drawCloud(345 - cloudOffset, 330, 1.3);
+drawCloud(60 - cloudOffset, 460, 0.95);
+
+drawCloud(70 - cloudOffset + W + 140, 150, 1.1);
+drawCloud(250 - cloudOffset + W + 140, 170, 0.8);
+drawCloud(345 - cloudOffset + W + 140, 330, 1.3);
+drawCloud(60 - cloudOffset + W + 140, 460, 0.95);
 }
 
 function drawCloud(x, y, scale) {
@@ -429,9 +437,17 @@ function drawGameScene() {
 }
 
 function update() {
+
+  cloudOffset += cloudSpeed;
+
+  if (cloudOffset > W + 120) {
+    cloudOffset = 0;
+  }
+
   if (scene === "game") {
     updateGame();
   }
+
 }
 
 function draw() {
