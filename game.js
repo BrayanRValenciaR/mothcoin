@@ -20,7 +20,8 @@ const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
 const playBtn = document.getElementById("playBtn");
 const jumpBtn = document.getElementById("jumpBtn");
-const darkToggle = document.getElementById("darkToggle");
+let darkMode = false;
+const moonBtn = document.getElementById("moonBtn");
 
 const W = canvas.width;
 const H = canvas.height;
@@ -54,7 +55,7 @@ let score = 0;
 let best = Number(localStorage.getItem("mothcoin-best") || 0);
 
 function setTheme() {
-  if (darkToggle.checked) {
+  if (darkMode) {
     document.body.classList.add("dark");
   } else {
     document.body.classList.remove("dark");
@@ -62,7 +63,7 @@ function setTheme() {
 }
 
 function toggleMoonlight() {
-  darkToggle.checked = !darkToggle.checked;
+  darkMode = !darkMode;
   setTheme();
 }
 
@@ -121,7 +122,7 @@ function jump() {
   }
 }
 
-playBtn.addEventListener("click", startGame);
+moonBtn.addEventListener("click", toggleMoonlight);
 
 jumpBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
