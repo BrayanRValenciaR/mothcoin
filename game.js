@@ -32,6 +32,7 @@ const moonlightBox = {
   w: 124,
   h: 34
 };
+
 let scene = "menu";
 
 const player = {
@@ -58,6 +59,11 @@ function setTheme() {
   } else {
     document.body.classList.remove("dark");
   }
+}
+
+function toggleMoonlight() {
+  darkToggle.checked = !darkToggle.checked;
+  setTheme();
 }
 
 darkToggle.addEventListener("change", setTheme);
@@ -119,12 +125,6 @@ playBtn.addEventListener("click", startGame);
 
 jumpBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-
-  if (scene === "gameover") {
-    toggleMoonlight();
-    return;
-  }
-
   jump();
 });
 
@@ -135,6 +135,21 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+canvas.addEventListener("pointerdown", (e) => {
+  if (scene !== "gameover") return;
+
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  if (pointInRect(x, y, moonlightBox)) {
+    toggleMoonlight();
+  }
+});
+
 function rectsOverlap(a, b) {
   return (
     a.x < b.x + b.w &&
@@ -142,14 +157,15 @@ function rectsOverlap(a, b) {
     a.y < b.y + b.h &&
     a.y + a.h > b.y
   );
-  function pointInRect(px, py, rect) {
+}
+
+function pointInRect(px, py, rect) {
   return (
     px >= rect.x &&
     px <= rect.x + rect.w &&
     py >= rect.y &&
     py <= rect.y + rect.h
   );
-}
 }
 
 function spawnObstacle() {
@@ -450,19 +466,13 @@ function drawGameOverText() {
   ctx.font = "bold 16px Arial";
   ctx.fillText("Press JUMP to restart", W / 2, 305);
 
-  // Moonlight button
-  const btnX = W / 2 - 62;
-  const btnY = 322;
-  const btnW = 124;
-  const btnH = 34;
-
   ctx.strokeStyle = dark ? "#dddddd" : "#444444";
   ctx.lineWidth = 2;
-  ctx.strokeRect(btnX, btnY, btnW, btnH);
+  ctx.strokeRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h);
 
   ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
   ctx.font = "bold 15px Arial";
-  ctx.fillText("MOONLIGHT", W / 2, 344);
+  ctx.fillText("MOONLIGHT", moonlightBox.x + moonlightBox.w / 2, 344);
 
   ctx.textAlign = "left";
 }
@@ -495,6 +505,7 @@ function draw() {
     drawGameScene();
   }
 }
+
 function loop() {
   update();
   draw();
