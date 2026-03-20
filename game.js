@@ -451,11 +451,15 @@ function drawGameOverText() {
   const dark = document.body.classList.contains("dark");
 
   ctx.fillStyle = dark ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.45)";
-  ctx.fillRect(60, 230, 300, 145);
+  ctx.beginPath();
+  ctx.roundRect(60, 230, 300, 145, 18);
+  ctx.fill();
 
   ctx.strokeStyle = dark ? "#dddddd" : "#444444";
   ctx.lineWidth = 2;
-  ctx.strokeRect(60, 230, 300, 145);
+  ctx.beginPath();
+  ctx.roundRect(60, 230, 300, 145, 18);
+  ctx.stroke();
 
   ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
   ctx.textAlign = "center";
@@ -464,11 +468,13 @@ function drawGameOverText() {
   ctx.fillText("GAME OVER", W / 2, 273);
 
   ctx.font = "bold 16px Arial";
-  ctx.fillText("Press JUMP to restart", W / 2, 305);
+  ctx.fillText("JUMP to Restart", W / 2, 305);
 
   ctx.strokeStyle = dark ? "#dddddd" : "#444444";
   ctx.lineWidth = 2;
-  ctx.strokeRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h);
+  ctx.beginPath();
+  ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
+  ctx.stroke();
 
   ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
   ctx.font = "bold 15px Arial";
