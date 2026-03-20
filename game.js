@@ -1,210 +1,536 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#111111">
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-<title>Mothcoin Flight</title>
+const moth1 = new Image();
+const moth2 = new Image();
+const moth3 = new Image();
 
-<link rel="manifest" href="manifest.webmanifest">
+moth1.src = "moth1.png";
+moth2.src = "moth2.png";
+moth3.src = "moth3.png";
 
-<style>
-:root{
---bg:#ececec;
---panel:rgba(255,255,255,0.88);
---text:#1f1f1f;
---muted:#6b6b6b;
---line:#505050;
---btn:#f7f7f7;
---btn-border:#888;
---accent:#111;
+const mothFrames = [moth1, moth2, moth3];
+let mothFrame = 0;
+let mothFrameTimer = 0;
+
+let cloudOffset = 0;
+const cloudSpeed = 0.15;
+
+const menuUI = document.getElementById("menuUI");
+const controls = document.getElementById("controls");
+const playBtn = document.getElementById("playBtn");
+const jumpBtn = document.getElementById("jumpBtn");
+const moonBtn = document.getElementById("moonBtn");
+
+let darkMode = false;
+
+const W = canvas.width;
+const H = canvas.height;
+const groundY = H - 120;
+
+const moonlightBox = {
+  x: W / 2 - 62,
+  y: 322,
+  w: 124,
+  h: 34
+};
+
+let scene = "menu";
+
+const player = {
+  x: 68,
+  y: groundY - 42,
+  w: 34,
+  h: 42,
+  vy: 0,
+  onGround: true
+};
+
+let obstacles = [];
+let speed = 6;
+let gravity = 0.75;
+let jumpPower = 13;
+let spawnTimer = 0;
+let spawnEvery = 85;
+let score = 0;
+let best = Number(localStorage.getItem("mothcoin-best") || 0);
+
+function setTheme() {
+  if (darkMode) {
+    document.body.classList.add("dark");
+  } else {
+    document.body.classList.remove("dark");
+  }
 }
 
-body.dark{
---bg:#141414;
---panel:rgba(20,20,20,0.9);
---text:#f3f3f3;
---muted:#bbbbbb;
---line:#d7d7d7;
---btn:#202020;
---btn-border:#8a8a8a;
---accent:#ffffff;
+function toggleMoonlight() {
+  darkMode = !darkMode;
+  setTheme();
 }
 
-*{
-box-sizing:border-box;
--webkit-tap-highlight-color:transparent;
+function showMenuUI(show) {
+  menuUI.style.display = show ? "flex" : "none";
 }
 
-html,body{
-margin:0;
-padding:0;
-background:var(--bg);
-color:var(--text);
-font-family:Arial,Helvetica,sans-serif;
-height:100%;
-overflow:hidden;
+function showControls(show) {
+  controls.classList.toggle("show", show);
 }
 
-.app{
-width:100%;
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-padding:12px;
+function resetGame() {
+  obstacles = [];
+  speed = 6;
+  spawnEvery = 85;
+  spawnTimer = 0;
+  score = 0;
+
+  player.x = 68;
+  player.y = groundY - player.h;
+  player.vy = 0;
+  player.onGround = true;
 }
 
-.game-shell{
-width:100%;
-max-width:430px;
-position:relative;
+function startGame() {
+  resetGame();
+  scene = "game";
+  showMenuUI(false);
+  showControls(true);
 }
 
-canvas{
-width:100%;
-height:auto;
-display:block;
-border:2px solid var(--line);
-background:var(--bg);
-image-rendering:pixelated;
-image-rendering:crisp-edges;
-border-radius:12px;
+function goToMenu() {
+  scene = "menu";
+  showMenuUI(true);
+  showControls(false);
 }
 
-.menu-ui{
-position:absolute;
-inset:0;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-pointer-events:none;
+function jump() {
+  if (scene === "menu") {
+    startGame();
+    return;
+  }
+
+  if (scene === "gameover") {
+    startGame();
+    return;
+  }
+
+  if (scene !== "game") return;
+
+  if (player.onGround) {
+    player.vy = -jumpPower;
+    player.onGround = false;
+  }
 }
 
-.menu-center{
-margin-top:-40px;
-display:flex;
-flex-direction:column;
-align-items:center;
-gap:14px;
-pointer-events:auto;
+playBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  startGame();
+});
+
+moonBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  toggleMoonlight();
+});
+
+jumpBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  jump();
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    e.preventDefault();
+    if (!e.repeat) jump();
+  }
+});
+
+canvas.addEventListener("pointerdown", (e) => {
+  if (scene === "menu") {
+    startGame();
+    return;
+  }
+
+  if (scene !== "gameover") return;
+
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  if (pointInRect(x, y, moonlightBox)) {
+    toggleMoonlight();
+  }
+});
+
+function rectsOverlap(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
 }
 
-.game-title{
-margin:0;
-font-size:34px;
-letter-spacing:3px;
-font-weight:900;
-color:var(--accent);
-text-align:center;
-text-shadow:2px 2px 0 rgba(0,0,0,0.12);
+function pointInRect(px, py, rect) {
+  return (
+    px >= rect.x &&
+    px <= rect.x + rect.w &&
+    py >= rect.y &&
+    py <= rect.y + rect.h
+  );
 }
 
-.sub{
-margin-top:-4px;
-font-size:12px;
-letter-spacing:2px;
-color:var(--muted);
-text-transform:uppercase;
+function spawnObstacle() {
+  const sizeRoll = Math.random();
+
+  if (sizeRoll < 0.5) {
+    obstacles.push({
+      x: W + 20,
+      y: groundY - 30,
+      w: 22,
+      h: 30
+    });
+  } else {
+    obstacles.push({
+      x: W + 20,
+      y: groundY - 42,
+      w: 18,
+      h: 42
+    });
+  }
 }
 
-.menu-buttons{
-display:flex;
-gap:12px;
+function updateDifficulty() {
+  speed = 6 + Math.min(4, Math.floor(score / 250) * 0.35);
+  spawnEvery = Math.max(52, 85 - Math.floor(score / 180) * 2);
 }
 
-button{
-pointer-events:auto;
-border:2px solid var(--btn-border);
-background:var(--btn);
-color:var(--text);
-padding:12px 22px;
-border-radius:20px;
-font-weight:800;
-font-size:15px;
-cursor:pointer;
-box-shadow:0 3px 0 rgba(0,0,0,0.08);
+function updateGame() {
+  updateDifficulty();
+
+  player.vy += gravity;
+  player.y += player.vy;
+
+  if (player.y + player.h >= groundY) {
+    player.y = groundY - player.h;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  spawnTimer++;
+  if (spawnTimer >= spawnEvery) {
+    spawnTimer = 0;
+    spawnObstacle();
+  }
+
+  for (let i = 0; i < obstacles.length; i++) {
+    const o = obstacles[i];
+    o.x -= speed;
+
+    if (rectsOverlap(player, o)) {
+      scene = "gameover";
+      showControls(true);
+
+      if (score > best) {
+        best = score;
+        localStorage.setItem("mothcoin-best", best);
+      }
+    }
+  }
+
+  obstacles = obstacles.filter((o) => o.x + o.w > 0);
+
+  if (scene === "game") {
+    score++;
+
+    if (score > best) {
+      best = score;
+      localStorage.setItem("mothcoin-best", best);
+    }
+  }
 }
 
-button:active{
-transform:translateY(1px);
+function drawSky() {
+  const dark = document.body.classList.contains("dark");
+
+  ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.beginPath();
+  ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
+  ctx.arc(W - 72, 78, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (dark) {
+    ctx.beginPath();
+    ctx.fillStyle = "#1a1a1a";
+    ctx.arc(W - 40, 78, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(120,120,100,0.28)";
+    ctx.beginPath();
+    ctx.arc(W - 82, 66, 4, 0, Math.PI * 2);
+    ctx.arc(W - 92, 84, 3, 0, Math.PI * 2);
+    ctx.arc(W - 74, 92, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  drawCloud(70 - cloudOffset * 0.7, 150, 1.1);
+  drawCloud(250 - cloudOffset * 1.0, 170, 0.8);
+  drawCloud(345 - cloudOffset * 0.5, 330, 1.3);
+  drawCloud(60 - cloudOffset * 0.85, 460, 0.95);
+
+  drawCloud(70 - cloudOffset * 0.7 + W + 140, 150, 1.1);
+  drawCloud(250 - cloudOffset * 1.0 + W + 140, 170, 0.8);
+  drawCloud(345 - cloudOffset * 0.5 + W + 140, 330, 1.3);
+  drawCloud(60 - cloudOffset * 0.85 + W + 140, 460, 0.95);
 }
 
-.moon-btn{
-pointer-events:auto;
-border:2px solid var(--btn-border);
-background:var(--btn);
-color:var(--text);
-padding:12px 22px;
-border-radius:20px;
-font-weight:800;
-font-size:14px;
-cursor:pointer;
-box-shadow:0 3px 0 rgba(0,0,0,0.08);
+function drawCloud(x, y, scale) {
+  const dark = document.body.classList.contains("dark");
+
+  let alpha = 1;
+
+  if (x < 80) {
+    alpha = x / 80;
+  }
+
+  if (x > W - 80) {
+    alpha = (W - x) / 80;
+  }
+
+  alpha = Math.max(0, Math.min(1, alpha));
+
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = dark ? "#8a8a8a" : "#ffffff";
+
+  ctx.beginPath();
+  ctx.arc(x - 28 * scale, y + 6 * scale, 18 * scale, 0, Math.PI * 2);
+  ctx.arc(x - 8 * scale, y - 4 * scale, 22 * scale, 0, Math.PI * 2);
+  ctx.arc(x + 16 * scale, y - 2 * scale, 20 * scale, 0, Math.PI * 2);
+  ctx.arc(x + 38 * scale, y + 8 * scale, 16 * scale, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 1;
 }
 
-.controls{
-position:absolute;
-left:0;
-right:0;
-bottom:12px;
-display:none;
-justify-content:center;
-pointer-events:none;
+function drawGround() {
+  const dark = document.body.classList.contains("dark");
+
+  ctx.strokeStyle = dark ? "#d0d0d0" : "#5a5a5a";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  ctx.lineTo(W, groundY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, groundY + 34);
+  ctx.lineTo(W, groundY + 34);
+  ctx.stroke();
+
+  for (let i = 0; i < 40; i++) {
+    const x = (i * 18 + (scene === "game" ? score * 0.8 : 0)) % (W + 20);
+    const drawX = W - x;
+    ctx.fillStyle = dark ? "#bdbdbd" : "#727272";
+    ctx.fillRect(drawX, groundY + 18 + (i % 3), 3, 2);
+  }
 }
 
-.controls.show{
-display:flex;
+function drawFence() {
+  const dark = document.body.classList.contains("dark");
+  const baseX = 240;
+  const baseY = groundY;
+
+  ctx.strokeStyle = dark ? "#bbbbbb" : "#9b9b9b";
+  ctx.lineWidth = 3;
+
+  ctx.strokeRect(baseX, baseY - 54, 110, 50);
+
+  for (let i = 1; i < 4; i++) {
+    const x = baseX + i * 27;
+    ctx.beginPath();
+    ctx.moveTo(x, baseY - 58);
+    ctx.lineTo(x, baseY);
+    ctx.stroke();
+  }
+
+  for (let i = 1; i < 3; i++) {
+    const y = baseY - i * 16;
+    ctx.beginPath();
+    ctx.moveTo(baseX, y);
+    ctx.lineTo(baseX + 110, y);
+    ctx.stroke();
+  }
 }
 
-.jump-btn{
-pointer-events:auto;
-min-width:120px;
-padding:14px 18px;
-border-radius:999px;
-border:2px solid var(--btn-border);
-background:var(--panel);
-color:var(--text);
-font-size:16px;
-font-weight:900;
-text-transform:uppercase;
+function drawDecorCactus(x, h) {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#dddddd" : "#585858";
+
+  const y = groundY - h;
+
+  ctx.fillRect(x, y, 10, h);
+  ctx.fillRect(x - 8, y + 18, 8, 10);
+  ctx.fillRect(x + 10, y + 10, 8, 10);
 }
-</style>
-</head>
 
-<body>
+function drawRocks() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#cfcfcf" : "#686868";
 
-<div class="app">
-<div class="game-shell">
+  ctx.fillRect(185, groundY - 6, 20, 6);
+  ctx.fillRect(188, groundY - 12, 12, 6);
 
-<canvas id="game" width="420" height="750"></canvas>
+  ctx.fillRect(394, groundY - 8, 18, 8);
+  ctx.fillRect(404, groundY - 14, 10, 6);
 
-<div class="menu-ui" id="menuUI">
-<div class="menu-center">
+  ctx.fillRect(154, groundY - 4, 6, 4);
+}
 
-<h1 class="game-title">-- MOTH FLIGHT --</h1>
+function drawMenuScene() {
+  drawSky();
+  drawGround();
+  drawFence();
+  drawDecorCactus(90, 34);
+  drawDecorCactus(365, 42);
+  drawDecorCactus(389, 26);
+  drawRocks();
 
-<div class="sub">Proof of Life</div>
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#e9e9e9" : "#4c4c4c";
 
-<button id="moonBtn" class="moon-btn">MOONLIGHT</button>
+  const dx = 28;
+  const dy = groundY - 38;
 
-<div class="menu-buttons">
-<button id="playBtn">PLAY</button>
-</div>
+  ctx.fillRect(dx, dy, 22, 24);
+  ctx.fillRect(dx + 12, dy - 12, 14, 14);
+  ctx.fillRect(dx + 4, dy + 24, 5, 16);
+  ctx.fillRect(dx + 14, dy + 24, 5, 16);
+  ctx.fillRect(dx - 10, dy + 8, 10, 5);
 
-</div>
-</div>
+  ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
+  ctx.fillRect(dx + 20, dy - 8, 2, 2);
+}
 
-<div class="controls" id="controls">
-<button class="jump-btn" id="jumpBtn">JUMP</button>
-</div>
+function drawPlayer() {
+  mothFrameTimer++;
 
-</div>
-</div>
+  if (mothFrameTimer > 6) {
+    mothFrameTimer = 0;
+    mothFrame++;
 
-<script src="game.js?v=10"></script>
+    if (mothFrame >= mothFrames.length) {
+      mothFrame = 0;
+    }
+  }
 
-</body>
-</html>
+  const img = mothFrames[mothFrame];
+
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, player.x, player.y, player.w, player.h);
+  } else {
+    const dark = document.body.classList.contains("dark");
+    ctx.fillStyle = dark ? "#f1f1f1" : "#303030";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+  }
+}
+
+function drawObstacles() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#f1f1f1" : "#3f3f3f";
+
+  for (let i = 0; i < obstacles.length; i++) {
+    const o = obstacles[i];
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+    ctx.fillRect(o.x - 6, o.y + 14, 6, 8);
+    ctx.fillRect(o.x + o.w, o.y + 8, 6, 8);
+  }
+}
+
+function drawHud() {
+  const dark = document.body.classList.contains("dark");
+  ctx.fillStyle = dark ? "#f1f1f1" : "#2b2b2b";
+  ctx.font = "bold 18px Arial";
+  ctx.fillText("SCORE " + score, 16, 34);
+  ctx.fillText("BEST " + best, 16, 58);
+}
+
+function drawGameOverText() {
+  if (scene !== "gameover") return;
+
+  const dark = document.body.classList.contains("dark");
+
+  ctx.fillStyle = dark ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.45)";
+  ctx.beginPath();
+  ctx.roundRect(60, 230, 300, 145, 18);
+  ctx.fill();
+
+  ctx.strokeStyle = dark ? "#dddddd" : "#444444";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(60, 230, 300, 145, 18);
+  ctx.stroke();
+
+  ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
+  ctx.textAlign = "center";
+
+  ctx.font = "bold 26px Arial";
+  ctx.fillText("GAME OVER", W / 2, 273);
+
+  ctx.font = "bold 16px Arial";
+  ctx.fillText("JUMP to Restart", W / 2, 305);
+
+  ctx.strokeStyle = dark ? "#dddddd" : "#444444";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
+  ctx.stroke();
+
+  ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
+  ctx.font = "bold 15px Arial";
+  ctx.fillText("MOONLIGHT", moonlightBox.x + moonlightBox.w / 2, 344);
+
+  ctx.textAlign = "left";
+}
+
+function drawGameScene() {
+  drawSky();
+  drawGround();
+  drawPlayer();
+  drawObstacles();
+  drawHud();
+  drawGameOverText();
+}
+
+function update() {
+  cloudOffset += cloudSpeed;
+
+  if (cloudOffset > W + 140) {
+    cloudOffset = 0;
+  }
+
+  if (scene === "game") {
+    updateGame();
+  }
+}
+
+function draw() {
+  if (scene === "menu") {
+    drawMenuScene();
+  } else {
+    drawGameScene();
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+setTheme();
+goToMenu();
+loop();
