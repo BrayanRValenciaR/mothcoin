@@ -26,6 +26,12 @@ const W = canvas.width;
 const H = canvas.height;
 const groundY = H - 120;
 
+const moonlightBox = {
+  x: W / 2 - 62,
+  y: 322,
+  w: 124,
+  h: 34
+};
 let scene = "menu";
 
 const player = {
@@ -113,6 +119,12 @@ playBtn.addEventListener("click", startGame);
 
 jumpBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
+
+  if (scene === "gameover") {
+    toggleMoonlight();
+    return;
+  }
+
   jump();
 });
 
@@ -130,6 +142,14 @@ function rectsOverlap(a, b) {
     a.y < b.y + b.h &&
     a.y + a.h > b.y
   );
+  function pointInRect(px, py, rect) {
+  return (
+    px >= rect.x &&
+    px <= rect.x + rect.w &&
+    py >= rect.y &&
+    py <= rect.y + rect.h
+  );
+}
 }
 
 function spawnObstacle() {
@@ -415,11 +435,11 @@ function drawGameOverText() {
   const dark = document.body.classList.contains("dark");
 
   ctx.fillStyle = dark ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.45)";
-  ctx.fillRect(60, 230, 300, 110);
+  ctx.fillRect(60, 230, 300, 145);
 
   ctx.strokeStyle = dark ? "#dddddd" : "#444444";
   ctx.lineWidth = 2;
-  ctx.strokeRect(60, 230, 300, 110);
+  ctx.strokeRect(60, 230, 300, 145);
 
   ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
   ctx.textAlign = "center";
@@ -428,7 +448,21 @@ function drawGameOverText() {
   ctx.fillText("GAME OVER", W / 2, 273);
 
   ctx.font = "bold 16px Arial";
-  ctx.fillText("Press JUMP to restart", W / 2, 308);
+  ctx.fillText("Press JUMP to restart", W / 2, 305);
+
+  // Moonlight button
+  const btnX = W / 2 - 62;
+  const btnY = 322;
+  const btnW = 124;
+  const btnH = 34;
+
+  ctx.strokeStyle = dark ? "#dddddd" : "#444444";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+  ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
+  ctx.font = "bold 15px Arial";
+  ctx.fillText("MOONLIGHT", W / 2, 344);
 
   ctx.textAlign = "left";
 }
@@ -461,7 +495,6 @@ function draw() {
     drawGameScene();
   }
 }
-
 function loop() {
   update();
   draw();
