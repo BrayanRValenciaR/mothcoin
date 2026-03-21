@@ -254,8 +254,19 @@ function updateGame() {
 function drawSky() {
   const dark = document.body.classList.contains("dark");
 
-  ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
+ctx.fillStyle = dark ? "#241733" : "#9fd8ff";
   ctx.fillRect(0, 0, W, H);
+  // Horizon fade
+const gradient = ctx.createLinearGradient(0, 0, 0, H);
+if (dark) {
+  gradient.addColorStop(0, "rgba(120,90,160,0.15)");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+} else {
+  gradient.addColorStop(0, "rgba(255,255,255,0.35)");
+  gradient.addColorStop(1, "rgba(255,255,255,0)");
+}
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 0, W, H);
 
   ctx.beginPath();
   ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
