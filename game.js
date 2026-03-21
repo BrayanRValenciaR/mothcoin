@@ -10,8 +10,6 @@ moth2.src = "moth2.png";
 moth3.src = "moth3.png";
 
 const mothFrames = [moth1, moth2, moth3];
-let mothFrame = 0;
-let mothFrameTimer = 0;
 
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
@@ -24,28 +22,39 @@ const H = canvas.height;
 
 let darkMode = false;
 let scene = "menu";
-let isFlapping = false;
+let flapHeld = false;
 
-let best = Number(localStorage.getItem("mothcoin-glow-best") || 0);
+let mothFrame = 0;
+let mothFrameTimer = 0;
+
+let cloudOffset = 0;
+const cloudSpeed = 0.15;
+
 let score = 0;
+let best = Number(localStorage.getItem("mothcoin-glow-best") || 0);
 let missed = 0;
 const maxMissed = 5;
 
+let spawnTimer = 0;
+const spawnEvery = 42;
+
 const player = {
-  x: 110,
-  y: H / 2,
-  w: 54,
-  h: 54,
-  vy: 0,
-  gravity: 0.22,
-  flapPower: -0.42,
-  maxFall: 3.2
+  x: 90,
+  y: H / 2 - 30,
+  w: 60,
+  h: 60,
+  vy: 0
+};
+
+const moonlightBox = {
+  x: W / 2 - 70,
+  y: 355,
+  w: 140,
+  h: 35
 };
 
 let orbs = [];
 let particles = [];
-let spawnTimer = 0;
-let spawnEvery = 48;
 
 function setTheme() {
   if (darkMode) {
@@ -72,13 +81,17 @@ function resetGame() {
   score = 0;
   missed = 0;
   spawnTimer = 0;
+  flapHeld = false;
   orbs = [];
   particles = [];
-  isFlapping = false;
 
-  player.x = 110;
-  player.y = H / 2;
+  player.x = 90;
+  player.y = H / 2 - 30;
   player.vy = 0;
+
+  spawnOrb();
+  spawnOrb();
+  spawnOrb();
 }
 
 function startGame() {
@@ -110,11 +123,11 @@ function flapStart() {
   }
 
   if (scene !== "game") return;
-  isFlapping = true;
+  flapHeld = true;
 }
 
 function flapEnd() {
-  isFlapping = false;
+  flapHeld = false;
 }
 
 playBtn.addEventListener("pointerdown", (e) => {
@@ -162,12 +175,7 @@ canvas.addEventListener("pointerdown", (e) => {
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
-    if (
-      x >= W / 2 - 70 &&
-      x <= W / 2 + 70 &&
-      y >= 355 &&
-      y <= 390
-    ) {
+    if (pointInRect(x, y, moonlightBox)) {
       toggleMoonlight();
       return;
     }
@@ -182,6 +190,15 @@ canvas.addEventListener("pointerdown", (e) => {
 canvas.addEventListener("pointerup", flapEnd);
 canvas.addEventListener("pointercancel", flapEnd);
 
+function pointInRect(px, py, rect) {
+  return (
+    px >= rect.x &&
+    px <= rect.x + rect.w &&
+    py >= rect.y &&
+    py <= rect.y + rect.h
+  );
+}
+
 function rectsOverlap(a, b) {
   return (
     a.x < b.x + b.w &&
@@ -192,16 +209,15 @@ function rectsOverlap(a, b) {
 }
 
 function spawnOrb() {
-  const size = 20 + Math.random() * 14;
+  const size = 18 + Math.random() * 16;
 
   orbs.push({
-    x: W + 30,
-    y: 80 + Math.random() * (H - 220),
+    x: W + 20 + Math.random() * 120,
+    y: 90 + Math.random() * (H - 220),
     w: size,
     h: size,
-    speed: 2.3 + Math.random() * 1.8,
-    bob: Math.random() * Math.PI * 2,
-    glow: 0.5 + Math.random() * 0.5
+    speed: 2 + Math.random() * 1.6,
+    bob: Math.random() * Math.PI * 2
   });
 }
 
@@ -212,31 +228,32 @@ function burst(x, y, count) {
       y,
       vx: (Math.random() - 0.5) * 3,
       vy: (Math.random() - 0.5) * 3,
-      life: 24 + Math.random() * 14,
+      life: 20 + Math.random() * 16,
       size: 2 + Math.random() * 3
     });
   }
 }
 
 function updateGame() {
-  if (isFlapping) {
-    player.vy += player.flapPower;
+  if (flapHeld) {
+    player.vy -= 0.34;
   }
 
-  player.vy += player.gravity;
-  if (player.vy > player.maxFall) player.vy = player.maxFall;
-  if (player.vy < -4.4) player.vy = -4.4;
+  player.vy += 0.18;
+
+  if (player.vy < -4.2) player.vy = -4.2;
+  if (player.vy > 3.4) player.vy = 3.4;
 
   player.y += player.vy;
 
-  if (player.y < 24) {
-    player.y = 24;
-    player.vy = 0.3;
+  if (player.y < 25) {
+    player.y = 25;
+    player.vy = 0.2;
   }
 
   if (player.y + player.h > H - 70) {
     player.y = H - 70 - player.h;
-    player.vy = -0.4;
+    player.vy = -0.2;
   }
 
   spawnTimer++;
@@ -249,7 +266,7 @@ function updateGame() {
     const orb = orbs[i];
     orb.x -= orb.speed;
     orb.bob += 0.05;
-    orb.y += Math.sin(orb.bob) * 0.35;
+    orb.y += Math.sin(orb.bob) * 0.25;
 
     if (rectsOverlap(player, orb)) {
       score++;
@@ -260,7 +277,7 @@ function updateGame() {
 
     if (orb.x + orb.w < 0) {
       missed++;
-      burst(20, orb.y + orb.h / 2, 6);
+      burst(10, orb.y, 6);
       orbs.splice(i, 1);
     }
   }
@@ -280,6 +297,15 @@ function updateGame() {
 
   if (missed >= maxMissed) {
     endGame();
+  }
+}
+
+function update() {
+  cloudOffset += cloudSpeed;
+  if (cloudOffset > W + 140) cloudOffset = 0;
+
+  if (scene === "game") {
+    updateGame();
   }
 }
 
@@ -334,10 +360,8 @@ function drawCloud(x, y, scale) {
   const dark = document.body.classList.contains("dark");
 
   let alpha = 1;
-
   if (x < 80) alpha = x / 80;
   if (x > W - 80) alpha = (W - x) / 80;
-
   alpha = Math.max(0, Math.min(1, alpha));
 
   ctx.globalAlpha = alpha;
@@ -379,7 +403,7 @@ function drawOrbs() {
     const orb = orbs[i];
 
     ctx.save();
-    ctx.globalAlpha = 0.22 + orb.glow * 0.3;
+    ctx.globalAlpha = dark ? 0.4 : 0.28;
     ctx.fillStyle = dark ? "#e9d5ff" : "#fff7a8";
     ctx.beginPath();
     ctx.arc(orb.x + orb.w / 2, orb.y + orb.h / 2, orb.w * 0.9, 0, Math.PI * 2);
@@ -391,9 +415,9 @@ function drawOrbs() {
     ctx.arc(orb.x + orb.w / 2, orb.y + orb.h / 2, orb.w / 2, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = dark ? "#ffffff" : "#fffdf0";
+    ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.arc(orb.x + orb.w / 2 - 4, orb.y + orb.h / 2 - 4, orb.w / 7, 0, Math.PI * 2);
+    ctx.arc(orb.x + orb.w / 2 - 3, orb.y + orb.h / 2 - 3, orb.w / 8, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -403,7 +427,7 @@ function drawParticles() {
 
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
-    ctx.globalAlpha = Math.max(0, p.life / 38);
+    ctx.globalAlpha = Math.max(0, p.life / 36);
     ctx.fillStyle = dark ? "#f0e3ff" : "#fff5a8";
     ctx.fillRect(p.x, p.y, p.size, p.size);
   }
@@ -422,16 +446,15 @@ function drawMenuScene() {
   const dx = 36;
   const dy = H / 2 - 20;
 
-  ctx.fillRect(dx, dy, 18, 18);
-  ctx.fillRect(dx + 18, dy - 10, 14, 14);
-  ctx.fillRect(dx - 8, dy + 10, 8, 5);
-  ctx.fillRect(dx + 3, dy + 18, 4, 12);
-  ctx.fillRect(dx + 13, dy + 18, 4, 12);
+  ctx.fillRect(dx, dy, 22, 24);
+  ctx.fillRect(dx + 12, dy - 12, 14, 14);
+  ctx.fillRect(dx - 10, dy + 8, 10, 5);
+  ctx.fillRect(dx + 4, dy + 24, 5, 16);
+  ctx.fillRect(dx + 14, dy + 24, 5, 16);
 }
 
 function drawPlayer() {
   mothFrameTimer++;
-
   if (mothFrameTimer > 5) {
     mothFrameTimer = 0;
     mothFrame++;
@@ -492,7 +515,7 @@ function drawGameOverText() {
   ctx.strokeStyle = dark ? "#cccccc" : "#444444";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(W / 2 - 70, 355, 140, 35, 12);
+  ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
   ctx.stroke();
 
   ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
@@ -502,28 +525,19 @@ function drawGameOverText() {
   ctx.textAlign = "left";
 }
 
-function update() {
-  cloudOffset += cloudSpeed;
-  if (cloudOffset > W + 140) cloudOffset = 0;
-
-  if (scene === "game") {
-    updateGame();
-  }
-}
-
 function draw() {
-  drawSky();
-  drawGround();
-
   if (scene === "menu") {
     drawMenuScene();
-  } else {
-    drawOrbs();
-    drawParticles();
-    drawPlayer();
-    drawHud();
-    drawGameOverText();
+    return;
   }
+
+  drawSky();
+  drawGround();
+  drawOrbs();
+  drawParticles();
+  drawPlayer();
+  drawHud();
+  drawGameOverText();
 }
 
 function loop() {
@@ -533,5 +547,6 @@ function loop() {
 }
 
 setTheme();
-goToMenu();
+showMenuUI(true);
+showControls(false);
 loop();
