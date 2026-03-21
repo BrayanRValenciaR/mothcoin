@@ -474,7 +474,7 @@ function drawGameOverText() {
 
   const dark = document.body.classList.contains("dark");
 
- ctx.fillStyle = dark ? "rgba(50,40,70,0.9)" : "#e8def8";
+ctx.fillStyle = dark ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)";
   ctx.beginPath();
   ctx.roundRect(60, 230, 300, 145, 18);
   ctx.fill();
@@ -501,7 +501,7 @@ ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12
 ctx.fill();
 
 // Border
-ctx.strokeStyle = dark ? "#d6c6ff" : "#8b7d5a";
+ctx.strokeStyle = dark ? "#cccccc" : "#444444";
 ctx.lineWidth = 2;
 ctx.beginPath();
 ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
