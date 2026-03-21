@@ -483,15 +483,23 @@ function drawGameOverText() {
   ctx.font = "bold 16px Arial";
   ctx.fillText("JUMP to Restart", W / 2, 305);
 
-  ctx.strokeStyle = dark ? "#dddddd" : "#444444";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
-  ctx.stroke();
+  // Fill moonlight button
+ctx.fillStyle = dark ? "rgba(60,50,80,0.9)" : "#f5ecd9";
+ctx.beginPath();
+ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
+ctx.fill();
 
-  ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
-  ctx.font = "bold 15px Arial";
-  ctx.fillText("MOONLIGHT", moonlightBox.x + moonlightBox.w / 2, 344);
+// Border
+ctx.strokeStyle = dark ? "#d6c6ff" : "#8b7d5a";
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
+ctx.stroke();
+
+// Text
+ctx.fillStyle = dark ? "#ffffff" : "#222222";
+ctx.font = "bold 15px Arial";
+ctx.fillText("MOONLIGHT", moonlightBox.x + moonlightBox.w / 2, 344);
 
   ctx.textAlign = "left";
 }
