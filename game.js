@@ -13,47 +13,39 @@ const mothFrames = [moth1, moth2, moth3];
 let mothFrame = 0;
 let mothFrameTimer = 0;
 
-let cloudOffset = 0;
-const cloudSpeed = 0.15;
-
 const menuUI = document.getElementById("menuUI");
 const controls = document.getElementById("controls");
 const playBtn = document.getElementById("playBtn");
 const jumpBtn = document.getElementById("jumpBtn");
 const moonBtn = document.getElementById("moonBtn");
 
-let darkMode = false;
-
 const W = canvas.width;
 const H = canvas.height;
-const groundY = H - 120;
 
-const moonlightBox = {
-  x: W / 2 - 62,
-  y: 322,
-  w: 124,
-  h: 34
-};
-
+let darkMode = false;
 let scene = "menu";
+let isFlapping = false;
+
+let best = Number(localStorage.getItem("mothcoin-glow-best") || 0);
+let score = 0;
+let missed = 0;
+const maxMissed = 5;
 
 const player = {
-  x: 68,
-  y: groundY - 42,
-  w: 34,
-  h: 42,
+  x: 110,
+  y: H / 2,
+  w: 54,
+  h: 54,
   vy: 0,
-  onGround: true
+  gravity: 0.22,
+  flapPower: -0.42,
+  maxFall: 3.2
 };
 
-let obstacles = [];
-let speed = 6;
-let gravity = 0.75;
-let jumpPower = 13;
+let orbs = [];
+let particles = [];
 let spawnTimer = 0;
-let spawnEvery = 85;
-let score = 0;
-let best = Number(localStorage.getItem("mothcoin-best") || 0);
+let spawnEvery = 48;
 
 function setTheme() {
   if (darkMode) {
@@ -77,16 +69,16 @@ function showControls(show) {
 }
 
 function resetGame() {
-  obstacles = [];
-  speed = 6;
-  spawnEvery = 85;
-  spawnTimer = 0;
   score = 0;
+  missed = 0;
+  spawnTimer = 0;
+  orbs = [];
+  particles = [];
+  isFlapping = false;
 
-  player.x = 68;
-  player.y = groundY - player.h;
+  player.x = 110;
+  player.y = H / 2;
   player.vy = 0;
-  player.onGround = true;
 }
 
 function startGame() {
@@ -96,13 +88,17 @@ function startGame() {
   showControls(true);
 }
 
-function goToMenu() {
-  scene = "menu";
-  showMenuUI(true);
-  showControls(false);
+function endGame() {
+  scene = "gameover";
+  showControls(true);
+
+  if (score > best) {
+    best = score;
+    localStorage.setItem("mothcoin-glow-best", best);
+  }
 }
 
-function jump() {
+function flapStart() {
   if (scene === "menu") {
     startGame();
     return;
@@ -114,11 +110,11 @@ function jump() {
   }
 
   if (scene !== "game") return;
+  isFlapping = true;
+}
 
-  if (player.onGround) {
-    player.vy = -jumpPower;
-    player.onGround = false;
-  }
+function flapEnd() {
+  isFlapping = false;
 }
 
 playBtn.addEventListener("pointerdown", (e) => {
@@ -133,13 +129,23 @@ moonBtn.addEventListener("pointerdown", (e) => {
 
 jumpBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-  jump();
+  flapStart();
 });
+
+jumpBtn.addEventListener("pointerup", flapEnd);
+jumpBtn.addEventListener("pointerleave", flapEnd);
+jumpBtn.addEventListener("pointercancel", flapEnd);
 
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space" || e.code === "ArrowUp") {
     e.preventDefault();
-    if (!e.repeat) jump();
+    if (!e.repeat) flapStart();
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    flapEnd();
   }
 });
 
@@ -149,19 +155,32 @@ canvas.addEventListener("pointerdown", (e) => {
     return;
   }
 
-  if (scene !== "gameover") return;
+  if (scene === "gameover") {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
+    if (
+      x >= W / 2 - 70 &&
+      x <= W / 2 + 70 &&
+      y >= 355 &&
+      y <= 390
+    ) {
+      toggleMoonlight();
+      return;
+    }
 
-  const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top) * scaleY;
-
-  if (pointInRect(x, y, moonlightBox)) {
-    toggleMoonlight();
+    startGame();
+    return;
   }
+
+  flapStart();
 });
+
+canvas.addEventListener("pointerup", flapEnd);
+canvas.addEventListener("pointercancel", flapEnd);
 
 function rectsOverlap(a, b) {
   return (
@@ -172,101 +191,114 @@ function rectsOverlap(a, b) {
   );
 }
 
-function pointInRect(px, py, rect) {
-  return (
-    px >= rect.x &&
-    px <= rect.x + rect.w &&
-    py >= rect.y &&
-    py <= rect.y + rect.h
-  );
+function spawnOrb() {
+  const size = 20 + Math.random() * 14;
+
+  orbs.push({
+    x: W + 30,
+    y: 80 + Math.random() * (H - 220),
+    w: size,
+    h: size,
+    speed: 2.3 + Math.random() * 1.8,
+    bob: Math.random() * Math.PI * 2,
+    glow: 0.5 + Math.random() * 0.5
+  });
 }
 
-function spawnObstacle() {
-  const sizeRoll = Math.random();
-
-  if (sizeRoll < 0.5) {
-    obstacles.push({
-      x: W + 20,
-      y: groundY - 30,
-      w: 22,
-      h: 30
-    });
-  } else {
-    obstacles.push({
-      x: W + 20,
-      y: groundY - 42,
-      w: 18,
-      h: 42
+function burst(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 3,
+      vy: (Math.random() - 0.5) * 3,
+      life: 24 + Math.random() * 14,
+      size: 2 + Math.random() * 3
     });
   }
 }
 
-function updateDifficulty() {
-  speed = 6 + Math.min(4, Math.floor(score / 250) * 0.35);
-  spawnEvery = Math.max(52, 85 - Math.floor(score / 180) * 2);
-}
-
 function updateGame() {
-  updateDifficulty();
+  if (isFlapping) {
+    player.vy += player.flapPower;
+  }
 
-  player.vy += gravity;
+  player.vy += player.gravity;
+  if (player.vy > player.maxFall) player.vy = player.maxFall;
+  if (player.vy < -4.4) player.vy = -4.4;
+
   player.y += player.vy;
 
-  if (player.y + player.h >= groundY) {
-    player.y = groundY - player.h;
-    player.vy = 0;
-    player.onGround = true;
+  if (player.y < 24) {
+    player.y = 24;
+    player.vy = 0.3;
+  }
+
+  if (player.y + player.h > H - 70) {
+    player.y = H - 70 - player.h;
+    player.vy = -0.4;
   }
 
   spawnTimer++;
   if (spawnTimer >= spawnEvery) {
     spawnTimer = 0;
-    spawnObstacle();
+    spawnOrb();
   }
 
-  for (let i = 0; i < obstacles.length; i++) {
-    const o = obstacles[i];
-    o.x -= speed;
+  for (let i = orbs.length - 1; i >= 0; i--) {
+    const orb = orbs[i];
+    orb.x -= orb.speed;
+    orb.bob += 0.05;
+    orb.y += Math.sin(orb.bob) * 0.35;
 
-    if (rectsOverlap(player, o)) {
-      scene = "gameover";
-      showControls(true);
+    if (rectsOverlap(player, orb)) {
+      score++;
+      burst(orb.x + orb.w / 2, orb.y + orb.h / 2, 10);
+      orbs.splice(i, 1);
+      continue;
+    }
 
-      if (score > best) {
-        best = score;
-        localStorage.setItem("mothcoin-best", best);
-      }
+    if (orb.x + orb.w < 0) {
+      missed++;
+      burst(20, orb.y + orb.h / 2, 6);
+      orbs.splice(i, 1);
     }
   }
 
-  obstacles = obstacles.filter((o) => o.x + o.w > 0);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 1;
+    p.vx *= 0.98;
+    p.vy *= 0.98;
 
-  if (scene === "game") {
-    score++;
-
-    if (score > best) {
-      best = score;
-      localStorage.setItem("mothcoin-best", best);
+    if (p.life <= 0) {
+      particles.splice(i, 1);
     }
+  }
+
+  if (missed >= maxMissed) {
+    endGame();
   }
 }
 
 function drawSky() {
   const dark = document.body.classList.contains("dark");
 
-ctx.fillStyle = dark ? "#241733" : "#9fd8ff";
+  ctx.fillStyle = dark ? "#241733" : "#9fd8ff";
   ctx.fillRect(0, 0, W, H);
-  // Horizon fade
-const gradient = ctx.createLinearGradient(0, 0, 0, H);
-if (dark) {
-  gradient.addColorStop(0, "rgba(120,90,160,0.15)");
-  gradient.addColorStop(1, "rgba(0,0,0,0)");
-} else {
-  gradient.addColorStop(0, "rgba(255,255,255,0.35)");
-  gradient.addColorStop(1, "rgba(255,255,255,0)");
-}
-ctx.fillStyle = gradient;
-ctx.fillRect(0, 0, W, H);
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, H);
+  if (dark) {
+    gradient.addColorStop(0, "rgba(140,100,200,0.18)");
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+  } else {
+    gradient.addColorStop(0, "rgba(255,255,255,0.32)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+  }
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
 
   ctx.beginPath();
   ctx.fillStyle = dark ? "#d9d9a8" : "#e6ea6d";
@@ -275,11 +307,11 @@ ctx.fillRect(0, 0, W, H);
 
   if (dark) {
     ctx.beginPath();
-    ctx.fillStyle = "#1a1a1a";
-    ctx.arc(W - 40, 78, 30, 0, Math.PI * 2);
+    ctx.fillStyle = "#241733";
+    ctx.arc(W - 48, 78, 30, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "rgba(120,120,100,0.28)";
+    ctx.fillStyle = "rgba(120,120,100,0.25)";
     ctx.beginPath();
     ctx.arc(W - 82, 66, 4, 0, Math.PI * 2);
     ctx.arc(W - 92, 84, 3, 0, Math.PI * 2);
@@ -303,13 +335,8 @@ function drawCloud(x, y, scale) {
 
   let alpha = 1;
 
-  if (x < 80) {
-    alpha = x / 80;
-  }
-
-  if (x > W - 80) {
-    alpha = (W - x) / 80;
-  }
+  if (x < 80) alpha = x / 80;
+  if (x > W - 80) alpha = (W - x) / 80;
 
   alpha = Math.max(0, Math.min(1, alpha));
 
@@ -333,115 +360,93 @@ function drawGround() {
   ctx.lineWidth = 3;
 
   ctx.beginPath();
-  ctx.moveTo(0, groundY);
-  ctx.lineTo(W, groundY);
+  ctx.moveTo(0, H - 60);
+  ctx.lineTo(W, H - 60);
   ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(0, groundY + 34);
-  ctx.lineTo(W, groundY + 34);
-  ctx.stroke();
-
-  for (let i = 0; i < 40; i++) {
-    const x = (i * 18 + (scene === "game" ? score * 0.8 : 0)) % (W + 20);
+  for (let i = 0; i < 50; i++) {
+    const x = (i * 16 + score * 0.7) % (W + 20);
     const drawX = W - x;
     ctx.fillStyle = dark ? "#bdbdbd" : "#727272";
-    ctx.fillRect(drawX, groundY + 18 + (i % 3), 3, 2);
+    ctx.fillRect(drawX, H - 40 + (i % 3), 3, 2);
   }
 }
 
-function drawFence() {
+function drawOrbs() {
   const dark = document.body.classList.contains("dark");
-  const baseX = 240;
-  const baseY = groundY;
 
-  ctx.strokeStyle = dark ? "#bbbbbb" : "#9b9b9b";
-  ctx.lineWidth = 3;
+  for (let i = 0; i < orbs.length; i++) {
+    const orb = orbs[i];
 
-  ctx.strokeRect(baseX, baseY - 54, 110, 50);
-
-  for (let i = 1; i < 4; i++) {
-    const x = baseX + i * 27;
+    ctx.save();
+    ctx.globalAlpha = 0.22 + orb.glow * 0.3;
+    ctx.fillStyle = dark ? "#e9d5ff" : "#fff7a8";
     ctx.beginPath();
-    ctx.moveTo(x, baseY - 58);
-    ctx.lineTo(x, baseY);
-    ctx.stroke();
-  }
+    ctx.arc(orb.x + orb.w / 2, orb.y + orb.h / 2, orb.w * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
-  for (let i = 1; i < 3; i++) {
-    const y = baseY - i * 16;
+    ctx.fillStyle = dark ? "#f5e8ff" : "#fff1a8";
     ctx.beginPath();
-    ctx.moveTo(baseX, y);
-    ctx.lineTo(baseX + 110, y);
-    ctx.stroke();
+    ctx.arc(orb.x + orb.w / 2, orb.y + orb.h / 2, orb.w / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = dark ? "#ffffff" : "#fffdf0";
+    ctx.beginPath();
+    ctx.arc(orb.x + orb.w / 2 - 4, orb.y + orb.h / 2 - 4, orb.w / 7, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
-function drawDecorCactus(x, h) {
+function drawParticles() {
   const dark = document.body.classList.contains("dark");
-  ctx.fillStyle = dark ? "#dddddd" : "#585858";
 
-  const y = groundY - h;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    ctx.globalAlpha = Math.max(0, p.life / 38);
+    ctx.fillStyle = dark ? "#f0e3ff" : "#fff5a8";
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
 
-  ctx.fillRect(x, y, 10, h);
-  ctx.fillRect(x - 8, y + 18, 8, 10);
-  ctx.fillRect(x + 10, y + 10, 8, 10);
-}
-
-function drawRocks() {
-  const dark = document.body.classList.contains("dark");
-  ctx.fillStyle = dark ? "#cfcfcf" : "#686868";
-
-  ctx.fillRect(185, groundY - 6, 20, 6);
-  ctx.fillRect(188, groundY - 12, 12, 6);
-
-  ctx.fillRect(394, groundY - 8, 18, 8);
-  ctx.fillRect(404, groundY - 14, 10, 6);
-
-  ctx.fillRect(154, groundY - 4, 6, 4);
+  ctx.globalAlpha = 1;
 }
 
 function drawMenuScene() {
   drawSky();
   drawGround();
-  drawFence();
-  drawDecorCactus(90, 34);
-  drawDecorCactus(365, 42);
-  drawDecorCactus(389, 26);
-  drawRocks();
+  drawOrbs();
 
   const dark = document.body.classList.contains("dark");
   ctx.fillStyle = dark ? "#e9e9e9" : "#4c4c4c";
 
-  const dx = 28;
-  const dy = groundY - 38;
+  const dx = 36;
+  const dy = H / 2 - 20;
 
-  ctx.fillRect(dx, dy, 22, 24);
-  ctx.fillRect(dx + 12, dy - 12, 14, 14);
-  ctx.fillRect(dx + 4, dy + 24, 5, 16);
-  ctx.fillRect(dx + 14, dy + 24, 5, 16);
-  ctx.fillRect(dx - 10, dy + 8, 10, 5);
-
-  ctx.fillStyle = dark ? "#1a1a1a" : "#ececec";
-  ctx.fillRect(dx + 20, dy - 8, 2, 2);
+  ctx.fillRect(dx, dy, 18, 18);
+  ctx.fillRect(dx + 18, dy - 10, 14, 14);
+  ctx.fillRect(dx - 8, dy + 10, 8, 5);
+  ctx.fillRect(dx + 3, dy + 18, 4, 12);
+  ctx.fillRect(dx + 13, dy + 18, 4, 12);
 }
 
 function drawPlayer() {
   mothFrameTimer++;
 
-  if (mothFrameTimer > 6) {
+  if (mothFrameTimer > 5) {
     mothFrameTimer = 0;
     mothFrame++;
-
-    if (mothFrame >= mothFrames.length) {
-      mothFrame = 0;
-    }
+    if (mothFrame >= mothFrames.length) mothFrame = 0;
   }
 
   const img = mothFrames[mothFrame];
 
   if (img.complete && img.naturalWidth > 0) {
-    ctx.drawImage(img, player.x, player.y, player.w, player.h);
+    ctx.save();
+    const tilt = Math.max(-0.35, Math.min(0.35, player.vy * 0.08));
+    ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
+    ctx.rotate(tilt);
+    ctx.drawImage(img, -player.w / 2, -player.h / 2, player.w, player.h);
+    ctx.restore();
   } else {
     const dark = document.body.classList.contains("dark");
     ctx.fillStyle = dark ? "#f1f1f1" : "#303030";
@@ -449,24 +454,13 @@ function drawPlayer() {
   }
 }
 
-function drawObstacles() {
-  const dark = document.body.classList.contains("dark");
-  ctx.fillStyle = dark ? "#f1f1f1" : "#3f3f3f";
-
-  for (let i = 0; i < obstacles.length; i++) {
-    const o = obstacles[i];
-    ctx.fillRect(o.x, o.y, o.w, o.h);
-    ctx.fillRect(o.x - 6, o.y + 14, 6, 8);
-    ctx.fillRect(o.x + o.w, o.y + 8, 6, 8);
-  }
-}
-
 function drawHud() {
   const dark = document.body.classList.contains("dark");
   ctx.fillStyle = dark ? "#f1f1f1" : "#2b2b2b";
   ctx.font = "bold 18px Arial";
-  ctx.fillText("SCORE " + score, 16, 34);
+  ctx.fillText("GLOW " + score, 16, 34);
   ctx.fillText("BEST " + best, 16, 58);
+  ctx.fillText("MISSED " + missed + "/" + maxMissed, 16, 82);
 }
 
 function drawGameOverText() {
@@ -474,62 +468,43 @@ function drawGameOverText() {
 
   const dark = document.body.classList.contains("dark");
 
-ctx.fillStyle = dark ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)";
+  ctx.fillStyle = dark ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)";
   ctx.beginPath();
-  ctx.roundRect(60, 230, 300, 145, 18);
+  ctx.roundRect(50, 230, 320, 165, 18);
   ctx.fill();
 
- ctx.strokeStyle = dark ? "#d6c6ff" : "#7c6bb3";
+  ctx.strokeStyle = dark ? "#cccccc" : "#444444";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(60, 230, 300, 145, 18);
+  ctx.roundRect(50, 230, 320, 165, 18);
   ctx.stroke();
 
   ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
   ctx.textAlign = "center";
 
   ctx.font = "bold 26px Arial";
-  ctx.fillText("GAME OVER", W / 2, 273);
+  ctx.fillText("GAME OVER", W / 2, 270);
 
   ctx.font = "bold 16px Arial";
-  ctx.fillText("JUMP to Restart", W / 2, 305);
+  ctx.fillText("Glow Collected: " + score, W / 2, 302);
+  ctx.fillText("Tap or Press FLAP to restart", W / 2, 328);
 
-  // Fill moonlight button
-ctx.fillStyle = dark ? "rgba(60,50,80,0.9)" : "#f5ecd9";
-ctx.beginPath();
-ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
-ctx.fill();
+  ctx.strokeStyle = dark ? "#cccccc" : "#444444";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(W / 2 - 70, 355, 140, 35, 12);
+  ctx.stroke();
 
-// Border
-ctx.strokeStyle = dark ? "#cccccc" : "#444444";
-ctx.lineWidth = 2;
-ctx.beginPath();
-ctx.roundRect(moonlightBox.x, moonlightBox.y, moonlightBox.w, moonlightBox.h, 12);
-ctx.stroke();
-
-// Text
-ctx.fillStyle = dark ? "#ffffff" : "#222222";
-ctx.font = "bold 15px Arial";
-ctx.fillText("MOONLIGHT", moonlightBox.x + moonlightBox.w / 2, 344);
+  ctx.fillStyle = dark ? "#f1f1f1" : "#222222";
+  ctx.font = "bold 15px Arial";
+  ctx.fillText("MOONLIGHT", W / 2, 378);
 
   ctx.textAlign = "left";
 }
 
-function drawGameScene() {
-  drawSky();
-  drawGround();
-  drawPlayer();
-  drawObstacles();
-  drawHud();
-  drawGameOverText();
-}
-
 function update() {
   cloudOffset += cloudSpeed;
-
-  if (cloudOffset > W + 140) {
-    cloudOffset = 0;
-  }
+  if (cloudOffset > W + 140) cloudOffset = 0;
 
   if (scene === "game") {
     updateGame();
@@ -537,10 +512,17 @@ function update() {
 }
 
 function draw() {
+  drawSky();
+  drawGround();
+
   if (scene === "menu") {
     drawMenuScene();
   } else {
-    drawGameScene();
+    drawOrbs();
+    drawParticles();
+    drawPlayer();
+    drawHud();
+    drawGameOverText();
   }
 }
 
