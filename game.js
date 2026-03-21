@@ -463,12 +463,12 @@ function drawGameOverText() {
 
   const dark = document.body.classList.contains("dark");
 
- ctx.fillStyle = dark ? "rgba(40,40,40,0.85)" : "#f5ecd9";
+ ctx.fillStyle = dark ? "rgba(50,40,70,0.9)" : "#e8def8";
   ctx.beginPath();
   ctx.roundRect(60, 230, 300, 145, 18);
   ctx.fill();
 
- ctx.strokeStyle = dark ? "#cfcfcf" : "#8b7d5a";
+ ctx.strokeStyle = dark ? "#d6c6ff" : "#7c6bb3";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.roundRect(60, 230, 300, 145, 18);
